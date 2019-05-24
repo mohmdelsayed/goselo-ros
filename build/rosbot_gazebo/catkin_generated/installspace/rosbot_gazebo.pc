@@ -1,0 +1,8 @@
+prefix=/home/mohamed/catkin_ws/src/rosbot/install
+
+Name: rosbot_gazebo
+Description: Description of rosbot_gazebo
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/mohamed/catkin_ws/src/rosbot/install/lib 
+Requires: 

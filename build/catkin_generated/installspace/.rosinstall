@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/mohamed/catkin_ws/src/rosbot/install/setup.sh
