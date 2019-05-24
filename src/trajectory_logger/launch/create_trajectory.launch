@@ -1,0 +1,13 @@
+<launch>
+  
+
+
+
+
+  <!-- The path_odom_plotter node -->
+  <node name="path_odom_plotter" type="path_odom_plotter.py" pkg="odom_to_trajectory">
+  </node>
+
+
+
+</launch>
