@@ -1,2 +1,0 @@
-1- use only run_nav_with_rviz.sh to run the system with rviz and gmapping and then run_teleop.sh 
-2- use run_amcl_only.sh
