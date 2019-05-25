@@ -1,8 +1,0 @@
-prefix=/home/ros/goselo-ros/devel
-
-Name: rosbot_gazebo
-Description: Description of rosbot_gazebo
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/ros/goselo-ros/devel/lib 
-Requires: 
