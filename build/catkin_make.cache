@@ -1,0 +1,2 @@
+deep_planner:odom_to_trajectory:rosbot_description:rosbot_gazebo:rosbot_navigation
+-DCATKIN_DEVEL_PREFIX=/home/ros/goselo-ros/devel -DCMAKE_INSTALL_PREFIX=/home/ros/goselo-ros/install -G Unix Makefiles

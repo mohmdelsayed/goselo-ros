@@ -110,15 +110,20 @@ class publish_input_maps:
             #print "Path x, y", x,y
             self.path_map[x, y] += 1
 
-        #self.path_map = cv2.resize(self.path_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
-        #input_map = cv2.resize(input_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
-
         _, the_map = cv2.threshold( input_map, 100, 1, cv2.THRESH_BINARY_INV )
-        #cv2.imshow( 'Path Map', self.path_map )
-        #cv2.waitKey(3)
-        cv2.imshow( 'The Current Map', input_map)
+        
+        
+        
+        the_map_ = cv2.resize(the_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
+        path_map_ = cv2.resize(self.path_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
+        input_map_ = cv2.resize(input_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
+
+
+        cv2.imshow( 'Path Map', path_map_ )
         cv2.waitKey(3)
-        cv2.imshow( 'Thresholded Map', the_map*255 )
+        cv2.imshow( 'The Current Map', input_map_)
+        cv2.waitKey(3)
+        cv2.imshow( 'Thresholded Map', the_map_*255 )
         cv2.waitKey(3)
 
 
@@ -140,8 +145,16 @@ class publish_input_maps:
         cv2.circle( map_vis, (xA, yA), 8, (0, 0, 255), -1 )
         cv2.circle( map_vis, (xB, yB), 8, (0, 255, 0), -1 )
         
+        for i in range(self.current_path.shape[0]):
+            y = int(round((self.current_path[i,0]-data.info.origin.position.x)/data.info.resolution))
+            x = int(round((self.current_path[i,1]-data.info.origin.position.y)/data.info.resolution))
+            #print "Path x, y", x,y
+            map_vis[x, y] += 1
+
         #RGB_img = cv2.cvtColor(map_vis, cv2.COLOR_BGR2RGB)
-        cv2.imshow( 'Map Locations', map_vis)
+        map_vis_ = cv2.resize(map_vis, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
+
+        cv2.imshow( 'Map Locations', map_vis_)
         cv2.waitKey(3)
         
         

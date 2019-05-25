@@ -196,8 +196,11 @@ for move_count in range(max_move_count):
     # im_map_expand is (179, 274, 3)
     im_map_expand = cv2.erode( im_map_, np.ones((2,2),np.uint8), 1 )
     ret, the_map = cv2.threshold( im_map_, 100, 1, cv2.THRESH_BINARY_INV )
-    
+    cv2.imshow( 'current map', im_map_ )
+    cv2.waitKey(3)
     cv2.imshow( 'themap', the_map*255 )
+    cv2.waitKey(3)
+    cv2.imshow( 'the_map_pathlog', the_map_pathlog*255 )
     cv2.waitKey(3)
 
     the_map = the_map[:, :, 0] 
@@ -215,6 +218,7 @@ for move_count in range(max_move_count):
     t = time.time()
     predictions = classifier.predict([caffe_input_map], not center_only)
     dir_src = np.argmax( predictions )
+    print "direction is ", dir_src
     ang = 360 - 45 * dir_src - theta - 90
     while ang < 0:
         ang = ang + 360

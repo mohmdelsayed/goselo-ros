@@ -1,0 +1,8 @@
+prefix=/home/ros/goselo-ros/install
+
+Name: rosbot_navigation
+Description: Description of rosbot_navigation
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/ros/goselo-ros/install/lib 
+Requires: 
