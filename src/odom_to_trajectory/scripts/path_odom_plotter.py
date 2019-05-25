@@ -77,8 +77,8 @@ if __name__ == '__main__':
         #max size of array pose msg from the path
         if not rospy.has_param("~max_list_append"):
                 rospy.logwarn('The parameter max_list_append dont exists')
-        max_append = rospy.set_param("~max_list_append",1000) 
-        max_append = 10000000
+        max_append = rospy.get_param('~max_list_append')
+
         if not (max_append > 0):
                 rospy.logwarn('The parameter max_list_append not is correct')
                 sys.exit()

@@ -31,7 +31,7 @@ class publish_input_maps:
         self.current_path = np.zeros((0,0))
         self.path_map = None
 
-        self.curr_map_pub = rospy.Publisher("/current_map",OccupancyGrid,queue_size = 1)
+        self.curr_map_pub = rospy.Publisher("/current_map",Image,queue_size = 1)
         self.map_pub = rospy.Publisher("/goselo_map",Image,queue_size = 1)
         self.path_sub = rospy.Subscriber("/odompath",Path,self.callPath,queue_size = 1)
         self.loc_pub = rospy.Publisher("/goselo_loc",Image,queue_size = 1)
@@ -53,7 +53,7 @@ class publish_input_maps:
 
     def callPath(self, data):
 
-        rospy.loginfo("Got a path of length " + str(len(data.poses)))
+        #rospy.loginfo("Got a path of length " + str(len(data.poses)))
 
         self.current_path = np.zeros((len(data.poses), 2))
         for i in range(self.current_path.shape[0]):
@@ -76,7 +76,7 @@ class publish_input_maps:
         rospy.loginfo("Cell Size: " + str(data.info.resolution))
         rospy.loginfo("Map origin: " + str(data.info.origin.position.x) + " " + str(data.info.origin.position.y))
 
-	input_map = np.array(data.data).reshape((data.info.height, data.info.width))
+        input_map = np.array(data.data).reshape((data.info.height, data.info.width))
         
         
         input_map[input_map == -1] = 127
@@ -88,26 +88,26 @@ class publish_input_maps:
         
         rospy.loginfo("Numpy Map: " + str(input_map.shape))
 
-	#self.curr_locX = 0.1
-	#self.curr_locY = 0.1
-	#self.goal_locX = 0.2
-	#self.goal_locY = 0.2
+        #self.curr_locX = 0.1
+        #self.curr_locY = 0.1
+        #self.goal_locX = 0.2
+        #self.goal_locY = 0.2
 
         if(self.current_path.shape == (0,0)):
 	    rospy.loginfo("I received no Path yet!")
 
             
 
-	if (self.curr_locX == None) or (self.curr_locY == None) or (self.goal_locX == None) or (self.goal_locY == None):
-	    print "No current_loc OR No goal_loc"
-	    return
+        if (self.curr_locX == None) or (self.curr_locY == None) or (self.goal_locX == None) or (self.goal_locY == None):
+            print "No current_loc OR No goal_loc"
+            return
 
         self.path_map = np.zeros(input_map.shape)
-        print(self.current_path.shape)
+        print "Current path of length", self.current_path.shape
         for i in range(self.current_path.shape[0]):
-	    y = int(round((self.current_path[i,0]-data.info.origin.position.x)/data.info.resolution))
-	    x = int(round((self.current_path[i,1]-data.info.origin.position.y)/data.info.resolution))
-            print "Path x, y", x,y
+            y = int(round((self.current_path[i,0]-data.info.origin.position.x)/data.info.resolution))
+            x = int(round((self.current_path[i,1]-data.info.origin.position.y)/data.info.resolution))
+            #print "Path x, y", x,y
             self.path_map[x, y] += 1
 
         #self.path_map = cv2.resize(self.path_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
@@ -119,7 +119,6 @@ class publish_input_maps:
         cv2.imshow( 'The Current Map', input_map)
         cv2.waitKey(3)
         cv2.imshow( 'Thresholded Map', the_map*255 )
-
         cv2.waitKey(3)
 
 
@@ -127,10 +126,10 @@ class publish_input_maps:
         # ## Getting current location and goal location as a pixel location in the map ###############
         # #############################################################################################
  
- 	xA = int(round((self.curr_locX-data.info.origin.position.x)/data.info.resolution))
+        xA = int(round((self.curr_locX-data.info.origin.position.x)/data.info.resolution))
         yA = int(round((self.curr_locY-data.info.origin.position.y)/data.info.resolution))
 
- 	xB = int(round((self.goal_locX-data.info.origin.position.x)/data.info.resolution))
+        xB = int(round((self.goal_locX-data.info.origin.position.x)/data.info.resolution))
         yB = int(round((self.goal_locY-data.info.origin.position.y)/data.info.resolution))
         
         ## JUST FOR PLOTTING ##
@@ -144,29 +143,32 @@ class publish_input_maps:
         #RGB_img = cv2.cvtColor(map_vis, cv2.COLOR_BGR2RGB)
         cv2.imshow( 'Map Locations', map_vis)
         cv2.waitKey(3)
-        # goselo_map, goselo_loc, theta = generate_goselo_maps(xA, yA, xB, yB, the_map, self.path_map, data.info.height, data.info.width)
+        
+        
+        
+        goselo_map, goselo_loc, theta = generate_goselo_maps(xA, yA, xB, yB, input_map, self.path_map, data.info.height, data.info.width)
 
-	# angle = Float32()		
-	# angle.data = theta  #in Radians
-	# self.angle_pub.publish(angle)
+        angle = Float32()		
+        angle.data = theta  #in Radians
+        self.angle_pub.publish(angle)
 
-        # print "I published the angle"
+        print "I published the angle"
+        print "Goselo map dimensions", goselo_map.shape
 
-        # print "Goselo map dimensions", goselo_map.shape
+        goselo_map = np.array(goselo_map, dtype=np.uint8)
+        goselo_loc = np.array(goselo_loc, dtype=np.uint8)  
 
-        # goselo_map = np.array(goselo_map, dtype=np.uint8)
-        # goselo_loc = np.array(goselo_loc, dtype=np.uint8)  
+        gos_map_sent = self.bridge.cv2_to_imgmsg(goselo_map,"bgr8")
+        gos_loc_sent = self.bridge.cv2_to_imgmsg(goselo_loc,"bgr8")
+        input_map_sent = self.bridge.cv2_to_imgmsg(input_map,"mono8")
 
-        # gos_map_sent = self.bridge.cv2_to_imgmsg(goselo_map,"bgr8")
-        # gos_loc_sent = self.bridge.cv2_to_imgmsg(goselo_loc,"bgr8")
+        ### Publishing the three maps required to deep planner ###
 
-        # ### Publishing the three maps required to deep planner ###
+        self.map_pub.publish(gos_map_sent)
+        self.loc_pub.publish(gos_loc_sent)
+        self.curr_map_pub.publish(input_map_sent)
 
-        # self.map_pub.publish(gos_map_sent)
-        # self.loc_pub.publish(gos_loc_sent)
-        # self.curr_map_pub.publish(current_map)
-
-        # print "I reached the end of callback"
+        print "Published GOSELO Maps + Input Map \n\n\n"
 
 def generate_goselo_maps(xA, yA, xB, yB, the_map, the_map_pathlog, m, n):
 
