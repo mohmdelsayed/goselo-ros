@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import rospy
 from sensor_msgs.msg import Image
-from nav_msgs.msg import OccupancyGrid, Path
+from nav_msgs.msg import OccupancyGrid, Path, Odometry
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from std_msgs.msg import Float32
 
@@ -15,8 +15,6 @@ import os
 import scipy
 import scipy.ndimage
 from cv_bridge import CvBridge, CvBridgeError
-#from NamedAtomicLock import NamedAtomicLock
-            
 
 target_imsize = (224, 224)
 
@@ -37,7 +35,8 @@ class publish_input_maps:
         self.loc_pub = rospy.Publisher("/goselo_loc",Image,queue_size = 1)
         self.angle_pub = rospy.Publisher("/angle",Float32,queue_size = 1)
 
-        self.start_s = rospy.Subscriber("/initialpose",PoseWithCovarianceStamped,self.callbackStart,queue_size = 1)
+        self.odom_sub = rospy.Subscriber("/odom",Odometry,self.callbackStart,queue_size = 1)
+
         self.goal_s = rospy.Subscriber("/move_base_simple/goal",PoseStamped,self.callbackGoal,queue_size = 1)
         self.laser_map = rospy.Subscriber("/map",OccupancyGrid,self.callbackMap,queue_size = 1)
 
@@ -88,11 +87,6 @@ class publish_input_maps:
         
         rospy.loginfo("Numpy Map: " + str(input_map.shape))
 
-        #self.curr_locX = 0.1
-        #self.curr_locY = 0.1
-        #self.goal_locX = 0.2
-        #self.goal_locY = 0.2
-
         if(self.current_path.shape == (0,0)):
 	    rospy.loginfo("I received no Path yet!")
 
@@ -110,21 +104,27 @@ class publish_input_maps:
             #print "Path x, y", x,y
             self.path_map[x, y] += 1
 
+        kernel = np.ones((8,8), np.uint8) 
+
         _, the_map = cv2.threshold( input_map, 100, 1, cv2.THRESH_BINARY_INV )
         
-        
-        
+        # thickening the lines in each map
+        self.path_map = cv2.dilate(self.path_map,kernel,iterations = 1)
+        the_map = cv2.dilate(the_map,kernel,iterations = 1)
+
+        print "input_map shape, the_map shape", input_map.shape, the_map.shape
+        # for visualization only
         the_map_ = cv2.resize(the_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
         path_map_ = cv2.resize(self.path_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
         input_map_ = cv2.resize(input_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
 
 
-        cv2.imshow( 'Path Map', path_map_ )
-        cv2.waitKey(3)
-        cv2.imshow( 'The Current Map', input_map_)
-        cv2.waitKey(3)
-        cv2.imshow( 'Thresholded Map', the_map_*255 )
-        cv2.waitKey(3)
+        # cv2.imshow( 'Path Map', path_map_ )
+        # cv2.waitKey(1)
+        # cv2.imshow( 'The Current Map', input_map_)
+        # cv2.waitKey(1)
+        # cv2.imshow( 'Thresholded Map', the_map_*255 )
+        # cv2.waitKey(1)
 
 
         # #############################################################################################
@@ -154,13 +154,18 @@ class publish_input_maps:
         #RGB_img = cv2.cvtColor(map_vis, cv2.COLOR_BGR2RGB)
         map_vis_ = cv2.resize(map_vis, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
 
-        cv2.imshow( 'Map Locations', map_vis_)
-        cv2.waitKey(3)
+        # cv2.imshow( 'Map Locations', map_vis_)
+        # cv2.waitKey(1)
         
-        
-        
-        goselo_map, goselo_loc, theta = generate_goselo_maps(xA, yA, xB, yB, input_map, self.path_map, data.info.height, data.info.width)
 
+        goselo_map, goselo_loc, theta = generate_goselo_maps(xA, yA, xB, yB, the_map, self.path_map, data.info.height, data.info.width)
+
+        # plot GOSELO maps for debugging and making sure they change as the robot approaches its goal
+        cv2.imshow( 'goselo_map', goselo_map)
+        cv2.waitKey(1)
+        cv2.imshow( 'goselo_loc', goselo_loc)
+        cv2.waitKey(1)
+        
         angle = Float32()		
         angle.data = theta  #in Radians
         self.angle_pub.publish(angle)
@@ -184,10 +189,6 @@ class publish_input_maps:
         print "Published GOSELO Maps + Input Map \n\n\n"
 
 def generate_goselo_maps(xA, yA, xB, yB, the_map, the_map_pathlog, m, n):
-
-    ###############
-    # convert img #
-    ###############
 
     orig_map = np.zeros( (m, n, 4), dtype=np.float )
     orig_map[:,:,0] = np.array(the_map) #/ 255.
