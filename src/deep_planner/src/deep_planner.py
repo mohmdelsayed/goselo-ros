@@ -13,28 +13,16 @@ sys.path.insert(0, caffe_root + 'python')
 import caffe
 import math
 
-if True:
-    _size_width = 1436 #2586
-    _size_height = 553 #798
-    _grid_cell_size_m = 0.05 #0.0500000007451
-else:
-    _size_width = 2586
-    _size_height = 798
-    _grid_cell_size_m = 0.0500000007451
-
 # CNN
 pycaffe_dir = caffe_root + 'python/'
 center_only = True
 image_dims = [224, 224]
-channel_swap =  [0, 1, 2, 3, 4, 5] # [2, 1, 0]
+channel_swap =  [0, 1, 2, 3, 4, 5]
 model_def = '/home/ros/goselo-ros/src/deep_planner/src/models/deploy.prototxt'
 
 #pretrained_model = sys.argv[ 1 ]
 pretrained_model ='/home/ros/goselo-ros/src/deep_planner/src/models/goselo_invisible.caffemodel'
 caffe.set_mode_gpu()
-
-# !!!
-dirs = 36
 
 class publish_global_plan:
 
@@ -46,8 +34,8 @@ class publish_global_plan:
         self.loc_sub = rospy.Subscriber("/goselo_loc",Image,self.callback_goselo_loc,queue_size = 1)
         self.angle_sub = rospy.Subscriber("/angle",Float32,self.callback_angle,queue_size = 1)
         self.odom_sub = rospy.Subscriber("/odom",Odometry,self.callback_odom,queue_size = 1)
-        #self.start_sub = rospy.Subscriber("/initialpose",PoseWithCovarianceStamped,self.callback_initial,queue_size = 1) # topic subscribed from RVIZ
         self.goal_sub = rospy.Subscriber("/move_base_simple/goal",PoseStamped,self.callback_goal,queue_size = 1) # topic subscribed from RVIZ
+
         self.global_plan_pub = rospy.Publisher('/global_plan', Path, queue_size=1)
         self.move_robot = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         
@@ -55,15 +43,14 @@ class publish_global_plan:
         self.current_y = None
         self.goselo_map = np.zeros((1,1))
         self.goselo_loc = np.zeros((1,1))
-        self._size_width = _size_width   #added
-        self._size_height = _size_height  #added
-        self. cell_size = _grid_cell_size_m  #added
+        self._size_width = 0   #added
+        self._size_height = 0  #added
+        self.cell_size = None  #added
         self.angle = 0 # made it zero instead of none
         self.curr_map = np.zeros((1,1)) #added by mohamed
-        self.goal_x = 0.2
-        self.dir_src = -10000 #added by mohamed
-        self.goal_y = 0.2
-        self.loc = np.zeros( (_size_height, _size_width), dtype=np.int )
+        self.goal_x = None
+        self.goal_y = None
+        self.dir_src = None
         self.classifier = caffe.Classifier(model_def, pretrained_model, image_dims=image_dims, mean=None, input_scale=1.0, raw_scale=255.0, channel_swap=channel_swap)
         self.prev_avoid_direction = None
 
@@ -72,7 +59,10 @@ class publish_global_plan:
         self._size_width = data.info.width
         self._size_height = data.info.height
         self.cell_size = data.info.resolution
+        print "Received a raw map"
     def callback_goselo_map(self,data):
+        print "Received a GOSELO map"
+
         try:
             self.goselo_map = self.bridge.imgmsg_to_cv2(data, "bgr8") / 255.
         except CvBridgeError, e:
@@ -89,6 +79,7 @@ class publish_global_plan:
             return
         else:
             predictions = self.classifier.predict([np.concatenate([self.goselo_map, self.goselo_loc], 2)], not center_only)
+            print "prediction vector is ", predictions
             self.dir_src = np.argmax( predictions )
             
             dir_src = self.dir_src
@@ -102,18 +93,15 @@ class publish_global_plan:
             if dir_dst == 36:
                 dir_dst = 0
             route = [dir_dst]
-            print 'Route :', route
-
 
             # force avoidance
             avoid_flg = False
-            if (self.curr_map.shape != (1,1) and self.current_x != None and self.current_y != None): # removed .all()
+            if (self.curr_map.shape != (1,1) and self.current_x != None and self.current_y != None and self.angle != 0 and self._size_width != 0 and self._size_height != 0 and self.cell_size != None and self.goal_x != None and self.goal_y != None):
                 x = self.current_x
                 y = self.current_y
-                xA = int(round(x/self.cell_size)) + _size_width/2
-                yA = int(round(y/self.cell_size)) + _size_height/2
+                xA = int(round(x/self.cell_size)) + self._size_width/2
+                yA = int(round(y/self.cell_size)) + self._size_height/2
                 print xA, yA
-                self.loc[ yA ][ xA ] += 1
                 xA_ = xA + int(math.cos( route[0] * math.pi / 18. ) * 10)
                 yA_ = yA + int(math.sin( route[0] * math.pi / 18. ) * 10)
                 if self.curr_map[ yA_ ][ xA_ ] :
@@ -156,7 +144,7 @@ class publish_global_plan:
             cmd_vel = Twist()  #added
             cmd_vel.linear.x = 5*_dx  #added
             cmd_vel.linear.y = 5*_dy  #added
-            self.move_robot.publish(cmd_vel)
+            # self.move_robot.publish(cmd_vel)
             print "I published velocity", _dx, _dy
 
 

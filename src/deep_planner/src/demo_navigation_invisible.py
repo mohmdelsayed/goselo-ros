@@ -196,18 +196,28 @@ for move_count in range(max_move_count):
     # im_map_expand is (179, 274, 3)
     im_map_expand = cv2.erode( im_map_, np.ones((2,2),np.uint8), 1 )
     ret, the_map = cv2.threshold( im_map_, 100, 1, cv2.THRESH_BINARY_INV )
-    cv2.imshow( 'current map', im_map_ )
-    cv2.waitKey(3)
+    # cv2.imshow( 'current map', im_map_ )
+    # cv2.waitKey(3)
     cv2.imshow( 'themap', the_map*255 )
     cv2.waitKey(3)
-    cv2.imshow( 'the_map_pathlog', the_map_pathlog*255 )
-    cv2.waitKey(3)
+    # cv2.imshow( 'the_map_pathlog', the_map_pathlog*255 )
+    # cv2.waitKey(3)
 
     the_map = the_map[:, :, 0] 
     ret, the_map_expand = cv2.threshold( im_map_expand, 100, 1, cv2.THRESH_BINARY_INV )
     the_map_expand = the_map_expand[:, :, 0] 
 
     caffe_input_map, theta = generate_goselo_maps(xA, yA, xB, yB, the_map, the_map_pathlog, m, n)
+
+
+    goselo_map = caffe_input_map[:,:,0:3]
+    goselo_loc = caffe_input_map[:,:,3:6]
+
+    cv2.imshow( 'goselo_map', goselo_map)
+    cv2.waitKey(1)
+    cv2.imshow( 'goselo_loc', goselo_loc)
+    cv2.waitKey(1)
+
 
     #[np.concatenate([goselo_map, goselo_loc], 2)]
     caffe_input_map = caffe_input_map / 255.
