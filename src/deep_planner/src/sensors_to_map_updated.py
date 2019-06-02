@@ -24,8 +24,8 @@ class publish_input_maps:
         self.bridge = CvBridge()
         self.curr_locX = None
         self.curr_locY = None
-        self.goal_locX = None
-        self.goal_locY = None
+        self.goal_locX = -4.0
+        self.goal_locY = -1.0
         self.current_path = np.zeros((0,0))
         self.path_map = None
 

@@ -3,7 +3,7 @@
   <master auto="start"/>
 
   <!-- Localization -->
-  <node pkg="amcl" type="amcl" name="amcl" output="screen">
+  <!--node pkg="amcl" type="amcl" name="amcl" output="screen">
     <remap from="scan" to="/scan"/>
     <param name="use_map_topic" value="true" />
     <param name="odom_frame_id" value="odom"/>
@@ -12,7 +12,7 @@
     <param name="update_min_d" value="0.5"/>
     <param name="update_min_a" value="1.0"/>
   </node>
-  <!--include file="$(find amcl)/examples/amcl_omni.launch"/-->
+  <include file="$(find amcl)/examples/amcl_omni.launch"/-->
 
 
 
@@ -27,6 +27,7 @@
     <remap from="cmd_vel" to="cmd_vel"/>
     <remap from="odom" to="odom"/>
     <remap from="scan" to="/scan"/>
+    <param name="use_map_topic" value="true" />
     <param name="move_base/DWAPlannerROS/yaw_goal_tolerance" value="1.0"/>
     <param name="move_base/DWAPlannerROS/xy_goal_tolerance" value="1.0"/>
 
