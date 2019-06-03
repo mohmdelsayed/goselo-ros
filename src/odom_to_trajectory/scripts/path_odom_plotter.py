@@ -91,7 +91,7 @@ if __name__ == '__main__':
         #Subscription to the topic
         msg = rospy.Subscriber('/odom', Odometry, callback) 
 
-        rate = rospy.Rate(1000) # 30hz
+        rate = rospy.Rate(100) # 30hz
 
 try:
 	while not rospy.is_shutdown():
