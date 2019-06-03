@@ -32,7 +32,7 @@ class SetYawServer:
     # Do lots of awesome groundbreaking robot stuff here
     print "server is runnng!"
     cmd_vel_command = Twist()
-    control_gain = 5
+    control_gain = 3
     if self.curr_heading == None:
       return
 

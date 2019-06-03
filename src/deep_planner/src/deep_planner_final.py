@@ -52,6 +52,9 @@ class publish_global_plan:
         self.goal_flag = 0
         self.current_x = None
         self.current_y = None
+        self.object_avoidance_range = 50
+        self.object_avoidance_window = 40
+        self.down_scale = 2
         self.goselo_map = np.zeros((1,1))
         self.goselo_loc = np.zeros((1,1))
         self._size_width = 0   #added
@@ -74,27 +77,32 @@ class publish_global_plan:
         self.cell_size = data.info.resolution
         self.origin_x = data.info.origin.position.x
         self.origin_y = data.info.origin.position.y
+        self.curr_map[self.curr_map == -1] = 127
+        self.curr_map = self.curr_map.astype(np.uint8)
+        self.curr_map[self.curr_map == 0] = 255
+        self.curr_map = self.curr_map.astype(np.uint8)
+        self.curr_map[self.curr_map == 100] = 0
+        self.curr_map = self.curr_map.astype(np.uint8)
         print "Received a raw map"
 
 
 
-    def move_base(self, prediction):
-        ## TODOOO #####
-        ### RANK THE PREDICTIONS AND SELECT THE FIRST ONES WITH INTERDIFFERENCE 1e-1 OR LESS. THEN, SELECT THE DIRECTION TO BE THE CLOSEST FROM THESE TO PREVIOUS DIRECTION ##########
-        #max_index = np.argmax( predictions )
-        #print "max_index: ", max_index
-        #if self.prev_dir == None:
-        #    self.dir_src = max_index
-        #    self.prev_dir = max_index
-        #elif predictions[0][self.prev_dir] - predictions[0][max_index] < 0.1:
-        #    self.dir_src = self.prev_dir
-        #else:
-        #    self.dir_src = max_index
-        #    self.prev_dir = max_index
+    def move_base(self, r_predictions):
 
-        self.dir_src = prediction
-        dir_src = prediction
-        print "current direction", dir_src
+        max_index = np.argmax( r_predictions )
+        #self.dir_src = prediction
+        print "max_index: ", max_index
+        if self.prev_dir == None:
+            self.dir_src = max_index
+            self.prev_dir = max_index
+        if max_index != self.prev_dir and np.abs(r_predictions[0][self.prev_dir] - r_predictions[0][max_index]) < 0.1:
+                print "changing direction from  to :", max_index, self.prev_dir
+                self.dir_src = self.prev_dir
+        else:
+            self.dir_src = max_index
+            self.prev_dir = max_index
+        #dir_src = prediction
+        #print "current direction", dir_src
         print "Self angle from goal: ", self.angle
         
         ang = 360 - 45 * self.dir_src - self.angle - 90
@@ -111,49 +119,82 @@ class publish_global_plan:
         # force avoidance
         avoid_flg = False
         if (self.curr_map.shape != (1,1) and self.current_x != None and self.current_y != None and self.angle != 0 and self._size_width != 0 and self._size_height != 0 and self.cell_size != None and self.goal_x != None and self.goal_y != None):
-            x_o = self.current_x
-            y_o = self.current_y
             xA = int(round((self.current_x- self.origin_x)/(self.cell_size)))
             yA = int(round((self.current_y- self.origin_y)/(self.cell_size)))
-            
+            #xAt = int(round((self.current_x- self.origin_x)/(self.down_scale*self.cell_size)))
+            #yAt = int(round((self.current_y- self.origin_y)/(self.down_scale*self.cell_size)))
+
             #########################################################
-            xA_ = xA + int(math.cos( route[0] * math.pi / 4. ) *self.cell_size)
-            yA_ = yA + int(math.sin( route[0] * math.pi / 4. ) *self.cell_size)
-            
+            xA_ = xA + int(math.cos( route[0] * math.pi / 4. ) *self.object_avoidance_range)
+            yA_ = yA + int(math.sin( route[0] * math.pi / 4. ) *self.object_avoidance_range)
+            #xA_t = xAt + int(math.cos( route[0] * math.pi / 4. ) *10)
+            #yA_t = yAt + int(math.sin( route[0] * math.pi / 4. ) *10)
+
+
             #########################################################
-            
-            if self.curr_map[ yA_ ][ xA_ ] :
+            #map_vis = np.zeros((self.curr_map.shape[0]/self.down_scale,self.curr_map.shape[1]/self.down_scale,3), np.uint8)
+            #map_vis[:,:,0] = cv2.resize(self.curr_map, dsize=(self.curr_map.shape[1]/self.down_scale,self.curr_map.shape[0]/self.down_scale), interpolation=cv2.INTER_CUBIC)
+            #map_vis[:,:,1] = cv2.resize(self.curr_map, dsize=(self.curr_map.shape[1]/self.down_scale,self.curr_map.shape[0]/self.down_scale), interpolation=cv2.INTER_CUBIC)
+            #map_vis[:,:,2] = cv2.resize(self.curr_map, dsize=(self.curr_map.shape[1]/self.down_scale,self.curr_map.shape[0]/self.down_scale), interpolation=cv2.INTER_CUBIC)
+            #cv2.circle( map_vis, (xAt, yAt), 8, (0, 0, 255), -1 )
+            #cv2.circle( map_vis, (xA_t, yA_t), 8, (0, 0, 255), -1 )
+            #cv2.rectangle(map_vis,(xA_t-10,yA_t-10),(xA_t+10,yA_t+10),(0,255,0),3)
+            #cv2.circle( map_vis, (xB, yB), 8, (0, 0, 255), -1 )
+            #cv2.imshow( 'Current Map Locations', map_vis)
+            #cv2.waitKey(1)
+            if 0 in self.curr_map[ yA_-(self.object_avoidance_window/2): yA_+(self.object_avoidance_window/2), xA_-(self.object_avoidance_window/2): xA_+(self.object_avoidance_window/2)]:
                 print "Entered object avoidance"
                 if (self.prev_avoid_direction != None):
                     c = self.prev_avoid_direction
-                    xA_ = xA + int(math.cos( c * math.pi / 4. ) * self.cell_size)
-                    yA_ = yA + int(math.sin( c * math.pi / 4. ) * self.cell_size)
-                    if not self.curr_map[ yA_ ][ xA_ ] :
+                    xA_ = xA + int(math.cos( c * math.pi / 4. ) * self.object_avoidance_range)
+                    yA_ = yA + int(math.cos( c * math.pi / 4. ) * self.object_avoidance_range)
+                    if 0 not in self.curr_map[yA_-(self.object_avoidance_window/2): yA_+(self.object_avoidance_window/2), xA_-(self.object_avoidance_window/2):xA_+(self.object_avoidance_window/2)]:
                         route = [c]
                         self.prev_avoid_direction = c
                         avoid_flg = True
                         print 'Object Avoidance! Route :', route
-                else:
-                    for c in range(2,36):
-                        if c % 2 == 0:
-                            c = route[ 0 ] + c / 2
-                        else:
-                            c = route[ 0 ] - (c-1) / 2
+                    #for c in range(2,8):
+                    for c in range(route[0],route[0]+8):
+                        #c = i+1
+                        #if c % 2 == 0:
+                            #c = route[ 0 ] + c / 2
+                        #else:
+                            #c = route[ 0 ] - (c-1) / 2
                         if c < 0:
-                            c += 36
-                        elif c > 35:
-                            c -= 36
-                        xA_ = xA + int(math.cos( c * math.pi / 4. ) * self.cell_size)
-                        yA_ = yA + int(math.sin( c * math.pi / 4. ) * self.cell_size)
-                        if not self.curr_map[ yA_ ][ xA_ ] :
+                            c += 8
+                        elif c > 7:
+                            c -= 8
+                        xA_ = xA + int(math.cos( c * math.pi / 4. ) * self.object_avoidance_range)
+                        yA_ = yA + int(math.cos( c * math.pi / 4. ) * self.object_avoidance_range)
+                        if 0 not in self.curr_map[ yA_-(self.object_avoidance_window/2): yA_+(self.object_avoidance_window/2), xA_-(self.object_avoidance_window/2):xA_+(self.object_avoidance_window/2)]:
                             route = [c]
                             self.prev_avoid_direction = c
                             avoid_flg = True
                             print 'Object Avoidance! Route :', route
                             break
+                else:
+                    #for c in range(2,8):
+                    for c in range(route[0],route[0]+8):
+                        #c = i+1
+                        #if c % 2 == 0:
+                            #c = route[ 0 ] + c / 2
+                        #else:
+                            #c = route[ 0 ] - (c-1) / 2
+                        if c < 0:
+                            c += 8
+                        elif c > 7:
+                            c -= 8
+                        xA_ = xA + int(math.cos( c * math.pi / 4. ) * self.object_avoidance_range)
+                        yA_ = yA + int(math.cos( c * math.pi / 4. ) * self.object_avoidance_range)
+                        if 0 not in self.curr_map[ yA_-(self.object_avoidance_window/2): yA_+(self.object_avoidance_window/2), xA_-(self.object_avoidance_window/2):xA_+(self.object_avoidance_window/2)]:
+                            route = [c]
+                            self.prev_avoid_direction = c
+                            avoid_flg = True
+                            print 'Object Avoidance! Route :', route
+                            break
+                print "finished object avoidance"
             else:
                 self.prev_avoid_direction = None
-            #print "finished object avoidance"
 
 
             if(self.goal_x - self.current_x)*(self.goal_x - self.current_x) + (self.goal_y - self.current_y) * (self.goal_y - self.current_y) < 10*self.cell_size:
@@ -206,8 +247,8 @@ class publish_global_plan:
             print "I entered classifier"
             predictions = self.classifier.predict([np.concatenate([self.goselo_map, self.goselo_loc], 2)], not center_only)
             print "prediction vector is ", predictions
-            max_pred = np.argmax( predictions )
-            self.move_base(max_pred)
+            #max_pred = np.argmax( predictions )
+            self.move_base(predictions)
 
     def callback_angle(self,data):
         self.angle = data.data
