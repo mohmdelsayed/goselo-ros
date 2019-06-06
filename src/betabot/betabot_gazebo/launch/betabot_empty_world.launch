@@ -1,0 +1,56 @@
+<launch>
+  <!-- ==========Simulation Environment============ -->
+  <!-- using custom sdf models -->
+  <env name="GAZEBO_MODEL_PATH" value="$(find betabot_gazebo)/models"/>
+  <!-- call betabot costom world -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value=""/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include> 
+  <!-- ============================================= -->
+  <!-- ===================Betabot=================== -->
+  <!-- first betabot name -->
+  <arg name="first_bb"  default=""/>
+  <!--  betabot location -->
+  <arg name="first_bb_x_pos" default="0.0"/>
+  <arg name="first_bb_y_pos" default="0.0"/>
+  <arg name="first_bb_z_pos" default=" 0.0"/>
+  <arg name="first_bb_yaw"   default=" 0.0"/>
+
+    
+  <!-- call betabot urdf description -->
+  <param name="robot_description" command="$(find xacro)/xacro.py $(find betabot_description)/urdf/betabot.urdf.xacro" />
+  
+  <!-- send fake joint values -->
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"> </node>
+  
+  <!-- Combine joint values -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+    <param name="publish_frequency" type="double" value="50.0" />
+    <param name="tf_prefix" value="$(arg first_bb)" /> </node>
+  
+  <!-- bring betabot to the world -->
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg first_bb) -x $(arg first_bb_x_pos) -y $(arg first_bb_y_pos) -z $(arg first_bb_z_pos) -Y $(arg first_bb_yaw) -param robot_description" />
+
+  <!-- ============================================= -->
+  <!-- =================ExtraParam================== -->
+  <!-- PID parameters of betabot wheels -->
+  <rosparam param="/gazebo_ros_control/pid_gains">
+    left_wheel_link:
+      p: 10
+      i: 0.1
+      d: 0
+  </rosparam>
+  <rosparam param="/gazebo_ros_control/pid_gains">
+    right_wheel_link:
+      p: 10
+      i: 0.1
+      d: 0
+  </rosparam>
+
+
+</launch>

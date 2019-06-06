@@ -28,10 +28,12 @@ pycaffe_dir = caffe_root + 'python/'
 center_only = True
 image_dims = [224, 224]
 channel_swap =  [0, 1, 2, 3, 4, 5]
-model_def = '/home/ros/goselo-ros/src/deep_planner/src/models/deploy.prototxt'
+model_def = '/home/ros/models/deploy.prototxt'
+# model_def = '/home/ros/models/deploy_36.prototxt'
 
 #pretrained_model = sys.argv[ 1 ]
-pretrained_model ='/home/ros/goselo-ros/src/deep_planner/src/models/goselo_invisible.caffemodel'
+pretrained_model ='/home/ros/models/goselo_invisible.caffemodel'
+# pretrained_model ='/home/ros/models/model_36.caffemodel'
 caffe.set_mode_gpu()
 
 class publish_global_plan:

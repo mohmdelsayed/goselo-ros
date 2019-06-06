@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+  <include file="$(find betabot_description)/launch/betabot_gazebo.launch"></include>
+
+  <include file="$(find betabot_gazebo)/launch/betabot_world.launch"></include>
+
+</launch>

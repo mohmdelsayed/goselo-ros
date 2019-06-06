@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<launch>
+  <master auto="start"/>
+  <param name="/use_sim_time" value="true"/>
+    <node pkg="gmapping" type="slam_gmapping" name='gmapping_node' output='screen'>
+        <param name="base_frame" value="base_footprint"/>
+        <!-- <remap from="scan" to="/betabot/laser/scan"/> -->
+        <param name="odom_frame" value="odom"/>
+        <param name="delta" value="0.01"/>
+        <param name="xmin" value="-5"/>
+        <param name="ymin" value="-5"/>
+        <param name="xmax" value="5"/>
+        <param name="ymax" value="5"/>
+        <param name="maxUrange" value="5"/>
+        <param name="map_update_interval" value="1"/>
+        <param name="linearUpdate" value="0.05"/>
+        <param name="angularUpdate" value="0.05"/>
+        <param name="temporalUpdate" value="0.1"/>
+        <param name="particles" value="100"/>
+    </node>
+</launch>

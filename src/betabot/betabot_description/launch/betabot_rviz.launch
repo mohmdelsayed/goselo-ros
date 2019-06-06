@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+
+  <include file="$(find betabot_description)/launch/betabot.launch"></include>
+
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find betabot_description)/urdf/betabot.urdf.xacro'"/>
+
+  <!-- Show in Rviz   -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find betabot_description)/rviz/betabot.rviz" required="true" output="screen"/>
+
+</launch>

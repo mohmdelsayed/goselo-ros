@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+
+  <include file="$(find betabot_description)/launch/betabot_rviz.launch"></include>
+
+  <include file="$(find betabot_description)/launch/gmapping.launch"></include>
+
+</launch>

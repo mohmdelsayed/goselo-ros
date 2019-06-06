@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+
+  <include file="$(find betabot_description)/launch/betabot_minimalist.launch"></include>
+
+
+  <!-- Show in Rviz   -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find betabot_description)/rviz/betabot.rviz" required="true" output="screen"/>
+
+  <include file="$(find betabot_gazebo)/launch/betabot_world_recognition.launch"></include>
+</launch>
