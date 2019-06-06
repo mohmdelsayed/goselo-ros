@@ -54,6 +54,7 @@ class publish_global_plan:
         self.goal_flag = 0
         self.current_x = None
         self.current_y = None
+        self.predictions = np.zeros((1,1))
         self.object_avoidance_range = 50
         self.object_avoidance_window = 40
         self.down_scale = 2
@@ -199,7 +200,7 @@ class publish_global_plan:
                 self.prev_avoid_direction = None
 
 
-            if(self.goal_x - self.current_x)*(self.goal_x - self.current_x) + (self.goal_y - self.current_y) * (self.goal_y - self.current_y) < 10*self.cell_size:
+            if(self.goal_x - self.current_x)*(self.goal_x - self.current_x) + (self.goal_y - self.current_y) * (self.goal_y - self.current_y) < 5*self.cell_size:
                 print "I REACHED THE GOAL"
                 cmd_vel_command = Twist()
                 cmd_vel_command.linear.x = 0; 
@@ -219,7 +220,7 @@ class publish_global_plan:
                 # self.action_goal_client.wait_for_result(rospy.Duration.from_sec(1.0))
                 self.action_goal_client.wait_for_result()
                 cmd_vel_command = Twist()
-                cmd_vel_command.linear.x = 0.1; 
+                cmd_vel_command.linear.x = 0.1
                 cmd_vel_command.angular.z = 0
                 self.move_robot.publish(cmd_vel_command)
         else:
@@ -247,10 +248,9 @@ class publish_global_plan:
             return
         else:
             print "I entered classifier"
-            predictions = self.classifier.predict([np.concatenate([self.goselo_map, self.goselo_loc], 2)], not center_only)
-            print "prediction vector is ", predictions
+            self.predictions = self.classifier.predict([np.concatenate([self.goselo_map, self.goselo_loc], 2)], not center_only)
+            print "prediction vector is ", self.predictions
             #max_pred = np.argmax( predictions )
-            self.move_base(predictions)
 
     def callback_angle(self,data):
         self.angle = data.data
@@ -263,6 +263,8 @@ class publish_global_plan:
     def callback_odom   (self,data):
         self.current_x = data.pose.pose.position.x
         self.current_y = data.pose.pose.position.y
+        if (self.predictions.shape != (1,1)):
+            self.move_base(self.predictions)
 
 
 

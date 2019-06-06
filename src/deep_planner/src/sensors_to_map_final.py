@@ -35,7 +35,7 @@ class publish_input_maps:
         self.goal_locY = None
         self.current_path = np.zeros((0,0))
         self.path_map = None
-        self.down_scale = 2 # MAPS DOWNSCALING
+        self.down_scale = 4 # MAPS DOWNSCALING
         self.curr_map_pub = rospy.Publisher("/current_map",Image,queue_size = 1)
         self.map_pub = rospy.Publisher("/goselo_map",Image,queue_size = 1)
         self.path_sub = rospy.Subscriber("/odompath",Path,self.callPath,queue_size = 1)

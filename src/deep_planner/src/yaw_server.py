@@ -32,7 +32,7 @@ class SetYawServer:
     # Do lots of awesome groundbreaking robot stuff here
     print "server is runnng!"
     cmd_vel_command = Twist()
-    control_gain = 10
+    control_gain = 2
     if self.curr_heading == None:
       return
 
@@ -42,9 +42,10 @@ class SetYawServer:
       cmd_vel_command.linear.x = 0.0
       self.move_robot.publish(cmd_vel_command)
 
-    cmd_vel_command.angular.z = 0
-    cmd_vel_command.linear.x = 0.0
-    self.move_robot.publish(cmd_vel_command)
+
+    # cmd_vel_command.angular.z = 0
+    # cmd_vel_command.linear.x = 0.0
+    # self.move_robot.publish(cmd_vel_command)
     print "succeeded with error: ", abs((goal.desired_yaw - (self.curr_heading)))
     self.server.set_succeeded()
 
