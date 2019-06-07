@@ -15,6 +15,14 @@ from collections import deque
 import time
 
 
+def goalCallback(data):
+        global x_goal
+        global y_goal
+        if (x_goal != data.pose.position.x or y_goal != data.pose.position.y):
+                path.poses = []
+        x_goal = data.pose.position.x
+        y_goal = data.pose.position.y
+
 def callback(data):
         global xAnt
         global yAnt
@@ -68,6 +76,10 @@ if __name__ == '__main__':
         yAnt=0.0
         cont=0
 
+        global x_goal
+        global y_goal
+        x_goal = 0.0
+        y_goal = 0.0
 
 
         #Node and msg initialization
@@ -86,10 +98,10 @@ if __name__ == '__main__':
 
 
         path = Path() #creamos el mensaje path de tipo path 
-        msg = Odometry()
 
         #Subscription to the topic
-        msg = rospy.Subscriber('/odom', Odometry, callback) 
+        rospy.Subscriber('/odom', Odometry, callback) 
+        rospy.Subscriber('/move_base_simple/goal', PoseStamped, goalCallback) 
 
         rate = rospy.Rate(100) # 30hz
 

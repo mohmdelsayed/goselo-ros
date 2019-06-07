@@ -1569,7 +1569,7 @@
       </camera>
     </gui>
 
-
+<!-- 
 
       <actor name="animated_cylinder1">
         <link name="cylinder_link1">
@@ -1736,7 +1736,7 @@
              </waypoint>
           </trajectory>
         </script>
-      </actor>
+      </actor> -->
 
 
 

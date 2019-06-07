@@ -30,14 +30,14 @@ class SetYawServer:
 
   def execute(self, goal):
     # Do lots of awesome groundbreaking robot stuff here
-    print "server is runnng!"
+    #print "server is runnng!"
     cmd_vel_command = Twist()
     control_gain = 2
     if self.curr_heading == None:
       return
 
-    while abs((goal.desired_yaw - (self.curr_heading))) > 0.05:
-      #sprint "heading now, desired: ", self.curr_heading, goal.desired_yaw
+    while abs((goal.desired_yaw - (self.curr_heading))) > 0.1:
+      #print "heading now, desired: ", self.curr_heading, goal.desired_yaw
       cmd_vel_command.angular.z = control_gain * (goal.desired_yaw - (self.curr_heading))
       cmd_vel_command.linear.x = 0.0
       self.move_robot.publish(cmd_vel_command)
@@ -46,7 +46,7 @@ class SetYawServer:
     # cmd_vel_command.angular.z = 0
     # cmd_vel_command.linear.x = 0.0
     # self.move_robot.publish(cmd_vel_command)
-    print "succeeded with error: ", abs((goal.desired_yaw - (self.curr_heading)))
+    #print "succeeded with error: ", abs((goal.desired_yaw - (self.curr_heading)))
     self.server.set_succeeded()
 
 
