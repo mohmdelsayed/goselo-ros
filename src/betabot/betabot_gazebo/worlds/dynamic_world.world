@@ -1569,7 +1569,7 @@
       </camera>
     </gui>
 
-<!-- 
+
 
       <actor name="animated_cylinder1">
         <link name="cylinder_link1">
@@ -1597,11 +1597,11 @@
                 <pose>-6 -6.25  0 0 0 0</pose>
              </waypoint>
              <waypoint>
-                <time>16.0</time>
+                <time>32.0</time>
                 <pose>-6 5 0 0 0 0</pose>
              </waypoint>
              <waypoint>
-                <time>32.0</time>
+                <time>64.0</time>
                 <pose>-6 -6.25  0 0 0 0</pose>
              </waypoint>
 
@@ -1638,22 +1638,22 @@
              </waypoint>
 
              <waypoint>
-                <time>8.0</time>
-                <pose>3 -3 0 0 0 0</pose>
-             </waypoint>
-
-             <waypoint>
                 <time>16.0</time>
-                <pose>3 5 0 0 0 0</pose>
-             </waypoint>
-
-             <waypoint>
-                <time>24.0</time>
                 <pose>3 -3 0 0 0 0</pose>
              </waypoint>
 
              <waypoint>
                 <time>32.0</time>
+                <pose>3 5 0 0 0 0</pose>
+             </waypoint>
+
+             <waypoint>
+                <time>48.0</time>
+                <pose>3 -3 0 0 0 0</pose>
+             </waypoint>
+
+             <waypoint>
+                <time>64.0</time>
                 <pose>8 -3.5 0 0 0 0</pose>
              </waypoint>
 
@@ -1689,11 +1689,11 @@
                 <pose>1 -3.5 0 0 0 0</pose>
              </waypoint>
              <waypoint>
-                <time>16.0</time>
+                <time>32.0</time>
                 <pose>1 5 0 0 0 0</pose>
              </waypoint>
              <waypoint>
-                <time>32.0</time>
+                <time>64.0</time>
                 <pose>1 -3.5 0 0 0 0</pose>
              </waypoint>
           </trajectory>
@@ -1727,16 +1727,16 @@
                 <pose>14 4.5 0 0 0 0</pose>
              </waypoint>
              <waypoint>
-                <time>16.0</time>
+                <time>32.0</time>
                 <pose>14 -7 0 0 0 0</pose>
              </waypoint>
              <waypoint>
-                <time>32.0</time>
+                <time>64.0</time>
                 <pose>14 4.5 0 0 0 0</pose>
              </waypoint>
           </trajectory>
         </script>
-      </actor> -->
+      </actor>
 
 
 
