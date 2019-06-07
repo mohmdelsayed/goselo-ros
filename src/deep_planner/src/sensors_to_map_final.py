@@ -79,9 +79,9 @@ class publish_input_maps:
         inc = data.angle_increment
         ranges = data.ranges
         if (self.map_to_laser.shape != (0,0) and type(self.map) != 'NoneType'):
-            my_map = self.map_to_laser.copy()
+            #my_map = self.map_to_laser.copy()
             #laser standalone
-            #my_map = np.zeros(self.map_to_laser.shape)
+            my_map = np.zeros(self.map_to_laser.shape)
             
             self.my_measurements = np.zeros((len(ranges), 2))
             
@@ -120,7 +120,7 @@ class publish_input_maps:
 
             
 
-            goselo_map, goselo_loc, theta = generate_goselo_maps(xA, yA, xB, yB, self.the_map, self.path_map, self.map.info.height/self.down_scale, self.map.info.width/self.down_scale)
+            goselo_map, goselo_loc, theta = generate_goselo_maps(xA, yA, xB, yB, my_map, self.path_map, self.map.info.height/self.down_scale, self.map.info.width/self.down_scale)
 
             # plot GOSELO maps for debugging and making sure they change as the robot approaches its goal
             # cv2.imshow( 'goselo_map', goselo_map)
