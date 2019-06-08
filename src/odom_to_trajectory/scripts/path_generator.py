@@ -18,7 +18,6 @@ def goalCallback(data):
         global x_goal
         global y_goal
         global flag
-        global path
         global current_value
 
         if ((abs(x_goal - data.pose.position.x) > 0.001) and  (abs(y_goal - data.pose.position.y) > 0.001)):
@@ -37,7 +36,7 @@ def callback(data):
         global path
         global current_value
 
-    #To avoid repeating the values, it is found that the received values are differents
+        #To avoid repeating the values, it is found that the received values are differents
         if (abs(xAnt - data.pose.pose.position.x) > 0.0001 and abs(yAnt - data.pose.pose.position.y) > 0.0001):
                 current_value.append([data.pose.pose.position.x, data.pose.pose.position.y])
                 # print([data.pose.pose.position.x, data.pose.pose.position.y])
@@ -54,12 +53,10 @@ def callback(data):
         
         pub.publish(path)
 
-    #Save the last position
+        #Save the last position
         xAnt=data.pose.pose.position.x
         yAnt=data.pose.pose.position.y
         return path
-
-
 
 
 if __name__ == '__main__':
@@ -73,6 +70,8 @@ if __name__ == '__main__':
         xAnt=0.0
         yAnt=0.0
         cont=0
+        current_value = []
+
         global flag
         flag = False
 
@@ -81,12 +80,10 @@ if __name__ == '__main__':
         x_goal = 0.0
         y_goal = 0.0
 
-        current_value = []
         #Node and msg initialization
         rospy.init_node('path_odom_plotter')
 
-        #Rosparams that are set in the launch
-        #max size of array pose msg from the path
+        #Rosparams that are set in the launch file (max size of array pose msg from the path)
         if not rospy.has_param("~max_list_append"):
                 rospy.logwarn('The parameter max_list_append dont exists')
         max_append = rospy.get_param('~max_list_append')
@@ -97,17 +94,14 @@ if __name__ == '__main__':
         pub = rospy.Publisher('/odompath', Float32MultiArray, queue_size=1)
 
 
-        # path = Path() #creamos el mensaje path de tipo path 
-
         #Subscription to the topic
-        rospy.Subscriber('/odom', Odometry, callback) 
+        rospy.Subscriber('/odom', Odometry, callback)
         rospy.Subscriber('/move_base_simple/goal', PoseStamped, goalCallback) 
 
-        rate = rospy.Rate(30) # 30hz
+        rate = rospy.Rate(30)
 
 try:
 	while not rospy.is_shutdown():
-        	#rospy.spin()
         	rate.sleep()
 except rospy.ROSInterruptException:
 	pass

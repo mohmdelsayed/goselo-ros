@@ -1,0 +1,17 @@
+ <launch>
+  <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
+    <param name="output_frame" value="odom"/>
+    <param name="freq" value="30.0"/>
+    <param name="sensor_timeout" value="1.0"/>
+    <param name="odom_used" value="true"/>
+    <param name="imu_used" value="true"/>
+    <param name="vo_used" value="true"/>
+    <param name="debug" value="false"/>
+    <param name="self_diagnose" value="false"/>
+  </node>
+  <!-- The path_odom_plotter node -->
+  <node name="path_generator_ekf" type="path_generator_ekf.py" pkg="odom_to_trajectory">
+  <param name="max_list_append" value="100000" />
+  </node>
+
+ </launch>

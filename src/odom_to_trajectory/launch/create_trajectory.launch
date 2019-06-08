@@ -1,6 +1,6 @@
 <launch>  
   <!-- The path_odom_plotter node -->
-  <node name="path_odom_plotter" type="path_odom_plotter.py" pkg="odom_to_trajectory">
+  <node name="path_generator" type="path_generator.py" pkg="odom_to_trajectory">
   <param name="max_list_append" value="100000" />
   </node>
 </launch>
