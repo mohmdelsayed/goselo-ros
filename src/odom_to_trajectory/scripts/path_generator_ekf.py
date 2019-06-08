@@ -2,18 +2,11 @@
 #!/usr/bin/env python
 from __future__ import print_function
 import rospy
-from tf.transformations import quaternion_from_euler
 from std_msgs.msg import String, Float32MultiArray
-from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped
-from sensor_msgs.msg import Joy
+from tf.transformations import euler_from_quaternion
 import numpy as np
 import sys
-import json
-from math import sqrt
-from collections import deque
-
-import time
 
 def goalCallback(data):
         global x_goal
@@ -38,9 +31,12 @@ def callback(data):
         global current_value
 
         #To avoid repeating the values, it is found that the received values are differents
-        if (abs(xAnt - data.pose.pose.position.x) > 0.0001 and abs(yAnt - data.pose.pose.position.y) > 0.0001):
-                current_value.append([data.pose.pose.position.x, data.pose.pose.position.y])
-                # print([data.pose.pose.position.x, data.pose.pose.position.y])
+        if (abs(xAnt - data.pose.pose.position.x) > 0.0001 and abs(yAnt - data.pose.pose.position.y) > 0.0001):                
+                orientation_q = data.pose.pose.orientation
+                orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
+                (roll, pitch, yaw) = euler_from_quaternion (orientation_list)
+                pose_to_send = [data.pose.pose.position.x, data.pose.pose.position.y, yaw]
+                current_value.append(pose_to_send)
                 # print(len(current_value))
                 my_np = np.array(current_value).flatten()
                 my_array_for_publishing = Float32MultiArray(data=my_np)
@@ -96,7 +92,7 @@ if __name__ == '__main__':
 
 
         #Subscription to the topic
-        rospy.Subscriber('/robot_pose_ekf/odom_combined', Odometry, callback)
+        rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, callback)
         rospy.Subscriber('/move_base_simple/goal', PoseStamped, goalCallback) 
 
         rate = rospy.Rate(30)

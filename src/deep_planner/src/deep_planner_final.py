@@ -3,14 +3,12 @@ import sys
 import rospy
 import cv2
 import numpy as np
-from nav_msgs.msg import OccupancyGrid, Path, Odometry
-from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Twist, Quaternion
+from nav_msgs.msg import OccupancyGrid, Odometry
+from geometry_msgs.msg import PoseStamped, Twist
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float32
 from cv_bridge import CvBridge, CvBridgeError
-from tf.transformations import quaternion_from_euler
 import actionlib
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 caffe_root = '/home/ros/caffe'  # Change this to your path.
 sys.path.insert(0, caffe_root + 'python')
 import caffe
@@ -18,8 +16,6 @@ import math
 
 import roslib
 roslib.load_manifest('deep_planner')
-import rospy
-import actionlib
 from deep_planner.msg import SetYawAction, SetYawGoal
 
 
@@ -45,6 +41,8 @@ class publish_global_plan:
         self.map_sub = rospy.Subscriber("/goselo_map",Image,self.callback_goselo_map,queue_size = 1)
         self.loc_sub = rospy.Subscriber("/goselo_loc",Image,self.callback_goselo_loc,queue_size = 1)
         self.angle_sub = rospy.Subscriber("/angle",Float32,self.callback_angle,queue_size = 1)
+
+        # TODO: remove odometry and use EKF instead
         self.odom_sub = rospy.Subscriber("/odom",Odometry,self.callback_odom,queue_size = 1)
         self.goal_sub = rospy.Subscriber("/move_base_simple/goal",PoseStamped,self.callback_goal,queue_size = 1) # topic subscribed from RVIZ
 
@@ -143,7 +141,7 @@ class publish_global_plan:
                 # self.action_goal_client.wait_for_result(rospy.Duration.from_sec(1.0))
                 self.action_goal_client.wait_for_result()
                 cmd_vel_command = Twist()
-                cmd_vel_command.linear.x = 0.0
+                cmd_vel_command.linear.x = 0.1
                 cmd_vel_command.angular.z = 0
                 self.move_robot.publish(cmd_vel_command)
         else:

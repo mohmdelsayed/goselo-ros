@@ -1,23 +1,18 @@
 #!/usr/bin/env python
 import rospy
-from sensor_msgs.msg import Image, LaserScan, Imu
-from nav_msgs.msg import OccupancyGrid, Path, Odometry
-from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Point
+from sensor_msgs.msg import Image, LaserScan
+from nav_msgs.msg import OccupancyGrid
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from std_msgs.msg import Float32, Float32MultiArray
 
 import math
 import time
-import random
 import cv2
-import sys
 import numpy as np
-import os
 import scipy
 import scipy.ndimage
 from tf.transformations import euler_from_quaternion
 from cv_bridge import CvBridge, CvBridgeError
-import tf
-
 
 # ROS includes
 import roslib
@@ -42,29 +37,25 @@ class publish_input_maps:
         self.the_map = np.zeros((0,0))
         self.path_map = np.zeros((0,0))
         self.down_scale = 10 # MAPS DOWNSCALING
-
+        self.orientation = None
         self.map_pub = rospy.Publisher("/goselo_map",Image,queue_size = 1)
         self.path_sub = rospy.Subscriber("/odompath",Float32MultiArray,self.callPath,queue_size = 1)
         self.loc_pub = rospy.Publisher("/goselo_loc",Image,queue_size = 1)
         self.angle_pub = rospy.Publisher("/angle",Float32,queue_size = 1)
     
-        self.odom_sub = rospy.Subscriber("/odom",Odometry,self.callbackStart,queue_size = 1)
+        self.odom_sub = rospy.Subscriber("/robot_pose_ekf/odom_combined",PoseWithCovarianceStamped,self.callbackEKF,queue_size = 1)
         self.goal_s = rospy.Subscriber("/move_base_simple/goal",PoseStamped,self.callbackGoal,queue_size = 1)
         self.laser_map = rospy.Subscriber("/map",OccupancyGrid,self.callbackMap,queue_size = 1)
         self.laserscan_sub = rospy.Subscriber("/scan",LaserScan,self.callLaserScan,queue_size = 1)
-        self.imu_sub = rospy.Subscriber("/imu_data",Imu,self.callImu,queue_size = 1)
-        self.listener = tf.TransformListener()
         self.my_measurements = np.zeros((0,0))
 
-    def callImu(self, data):
-        orientation_q = data.orientation
+    def callbackEKF(self, data):
+        self.curr_locX = data.pose.pose.position.x
+        self.curr_locY = data.pose.pose.position.y
+        orientation_q = data.pose.pose.orientation
         orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
         (roll, pitch, yaw) = euler_from_quaternion (orientation_list)
         self.orientation = yaw
-
-    def callbackStart(self, data):
-        self.curr_locX = data.pose.pose.position.x
-        self.curr_locY = data.pose.pose.position.y
 
     def callbackGoal(self, data):
         self.goal_locX = data.pose.position.x
@@ -76,7 +67,7 @@ class publish_input_maps:
         max_ang = data.angle_max
         inc = data.angle_increment
         ranges = data.ranges
-        if (self.the_map.shape != (0,0) and type(self.map) != 'NoneType'):
+        if (self.the_map.shape != (0,0) and type(self.map) != 'NoneType' and type(self.orientation) != 'NoneType'):
             #my_map = self.the_map.copy()
             #laser standalone
             my_map = np.zeros(self.the_map.shape)
@@ -101,8 +92,8 @@ class publish_input_maps:
             # cv2.waitKey(1)
             # cv2.imshow( 'org Scan', (org)*255)
             # cv2.waitKey(1)
-            cv2.imshow( 'self.path_map', self.path_map)
-            cv2.waitKey(1)
+            # cv2.imshow( 'self.path_map', self.path_map)
+            # cv2.waitKey(1)
         else:
             rospy.logwarn("Cannot process laser map")
 
@@ -160,12 +151,12 @@ class publish_input_maps:
 
         input_data_len = np.asarray(data.data).shape[0]
         input_data = np.asarray(data.data)
-        path_vector = np.reshape(input_data, (input_data_len/2, 2))
+        path_vector = np.reshape(input_data, (input_data_len/3, 3))
 
         #rospy.loginfo("Got a path of length " + str(len(data.poses)))
-        if (type(self.map) == 'NoneType' or self.the_map.shape == (0,0)):
+        if (type(self.map) == 'NoneType' or self.the_map.shape == (0,0) or input_data_len == 0 or type(input_data_len) == 'NoneType'):
             return
-
+        #self.orientation = path_vector[-1, 2]
         self.current_path = path_vector
         temp = np.zeros(self.the_map.shape)
 

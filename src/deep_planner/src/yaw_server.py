@@ -8,6 +8,7 @@ from geometry_msgs.msg import Twist
 import math
 from deep_planner.msg import SetYawAction
 from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseWithCovarianceStamped
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from simple_pid import PID
 
@@ -16,7 +17,7 @@ class SetYawServer:
     self.server = actionlib.SimpleActionServer('SetYaw', SetYawAction, self.execute, False)
     self.server.start()
     self.move_robot = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
-    self.odom_sub = rospy.Subscriber("/odom",Odometry,self.callbackStart,queue_size = 1)
+    self.odom_sub = rospy.Subscriber("/robot_pose_ekf/odom_combined",PoseWithCovarianceStamped,self.callbackStart,queue_size = 1)
     self.curr_heading = None
 
   def callbackStart(self, msg):
@@ -38,7 +39,7 @@ class SetYawServer:
 
     pid = PID(P, I, D, setpoint=goal.desired_yaw)
 
-    if self.curr_heading == None:
+    if type(self.curr_heading) == 'NoneType':
       return
 
     while abs((goal.desired_yaw - (self.curr_heading))) > 0.1:
