@@ -10,6 +10,7 @@
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find betabot_gazebo)/worlds/dynamic_world.world"/>
+    <!-- <arg name="world_name" value="$(find betabot_gazebo)/worlds/static_world.world"/> -->
     <arg name="paused" value="$(arg paused)"/>
     <arg name="use_sim_time" value="$(arg use_sim_time)"/>
     <arg name="gui" value="$(arg gui)"/>
