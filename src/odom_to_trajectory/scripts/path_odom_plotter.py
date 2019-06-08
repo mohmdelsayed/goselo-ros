@@ -2,11 +2,11 @@
 from __future__ import print_function
 import rospy
 from tf.transformations import quaternion_from_euler
-from std_msgs.msg import String
-from nav_msgs.msg import Odometry, Path
+from std_msgs.msg import String, Float32MultiArray
+from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped
 from sensor_msgs.msg import Joy
-
+import numpy as np
 import sys
 import json
 from math import sqrt
@@ -14,12 +14,18 @@ from collections import deque
 
 import time
 
-
 def goalCallback(data):
         global x_goal
         global y_goal
-        if (x_goal != data.pose.position.x or y_goal != data.pose.position.y):
-                path.poses = []
+        global flag
+        global path
+        global current_value
+
+        if ((abs(x_goal - data.pose.position.x) > 0.001) and  (abs(y_goal - data.pose.position.y) > 0.001)):
+                print("flag is true!")
+                current_value = []
+        else:
+                print("Flag is flase")
         x_goal = data.pose.position.x
         y_goal = data.pose.position.y
 
@@ -27,41 +33,30 @@ def callback(data):
         global xAnt
         global yAnt
         global cont
-
-    #Is created the pose msg, its necessary do it each time because Python manages objects by reference, 
-        #and does not make deep copies unless explicitly asked to do so.
-        pose = PoseStamped()    
-
-    #Set a atributes of the msg
-        pose.header.frame_id = "odom"
-        pose.pose.position.x = float(data.pose.pose.position.x)
-        pose.pose.position.y = float(data.pose.pose.position.y)
-        pose.pose.orientation.x = float(data.pose.pose.orientation.x)
-        pose.pose.orientation.y = float(data.pose.pose.orientation.y)
-        pose.pose.orientation.z = float(data.pose.pose.orientation.z)
-        pose.pose.orientation.w = float(data.pose.pose.orientation.w)
+        global flag
+        global path
+        global current_value
 
     #To avoid repeating the values, it is found that the received values are differents
-        if (xAnt != pose.pose.position.x and yAnt != pose.pose.position.y):
-                #Set a atributes of the msg
-                pose.header.seq = path.header.seq + 1
-                path.header.frame_id="odom"
-                path.header.stamp=rospy.Time.now()
-                pose.header.stamp = path.header.stamp
-                path.poses.append(pose)
-                #Published the msg
+        if (abs(xAnt - data.pose.pose.position.x) > 0.0001 and abs(yAnt - data.pose.pose.position.y) > 0.0001):
+                current_value.append([data.pose.pose.position.x, data.pose.pose.position.y])
+                # print([data.pose.pose.position.x, data.pose.pose.position.y])
+                # print(len(current_value))
+                my_np = np.array(current_value).flatten()
+                my_array_for_publishing = Float32MultiArray(data=my_np)
+                
+                path = my_array_for_publishing
+                cont=cont+1
 
-        cont=cont+1
-
-        rospy.loginfo("Valor del contador: %i" % cont)
-        if cont>max_append:
-        	path.poses.pop(0)
-
+        #rospy.loginfo("Valor del contador: %i" % cont)
+        if (cont>max_append and len(current_value) != 0):
+        	current_value.pop(0)
+        
         pub.publish(path)
 
     #Save the last position
-        xAnt=pose.pose.orientation.x
-        yAnt=pose.pose.position.y
+        xAnt=data.pose.pose.position.x
+        yAnt=data.pose.pose.position.y
         return path
 
 
@@ -72,16 +67,21 @@ if __name__ == '__main__':
         global xAnt
         global yAnt
         global cont
+        global path
+        global current_value
+        path = Float32MultiArray()
         xAnt=0.0
         yAnt=0.0
         cont=0
+        global flag
+        flag = False
 
         global x_goal
         global y_goal
         x_goal = 0.0
         y_goal = 0.0
 
-
+        current_value = []
         #Node and msg initialization
         rospy.init_node('path_odom_plotter')
 
@@ -94,16 +94,16 @@ if __name__ == '__main__':
         if not (max_append > 0):
                 rospy.logwarn('The parameter max_list_append not is correct')
                 sys.exit()
-        pub = rospy.Publisher('/odompath', Path, queue_size=1)
+        pub = rospy.Publisher('/odompath', Float32MultiArray, queue_size=1)
 
 
-        path = Path() #creamos el mensaje path de tipo path 
+        # path = Path() #creamos el mensaje path de tipo path 
 
         #Subscription to the topic
         rospy.Subscriber('/odom', Odometry, callback) 
         rospy.Subscriber('/move_base_simple/goal', PoseStamped, goalCallback) 
 
-        rate = rospy.Rate(100) # 30hz
+        rate = rospy.Rate(30) # 30hz
 
 try:
 	while not rospy.is_shutdown():

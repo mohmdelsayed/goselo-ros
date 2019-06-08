@@ -9,6 +9,7 @@ import math
 from deep_planner.msg import SetYawAction
 from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
+from simple_pid import PID
 
 class SetYawServer:
   def __init__(self):
@@ -30,15 +31,20 @@ class SetYawServer:
 
   def execute(self, goal):
     # Do lots of awesome groundbreaking robot stuff here
-    #print "server is runnng!"
     cmd_vel_command = Twist()
-    control_gain = 2
+    P = 1.5
+    I = 0.0
+    D = 0.0
+
+    pid = PID(P, I, D, setpoint=goal.desired_yaw)
+
     if self.curr_heading == None:
       return
 
     while abs((goal.desired_yaw - (self.curr_heading))) > 0.1:
       #print "heading now, desired: ", self.curr_heading, goal.desired_yaw
-      cmd_vel_command.angular.z = control_gain * (goal.desired_yaw - (self.curr_heading))
+      control_value = pid(self.curr_heading)
+      cmd_vel_command.angular.z = control_value #control_gain * (goal.desired_yaw - (self.curr_heading))
       cmd_vel_command.linear.x = 0.0
       self.move_robot.publish(cmd_vel_command)
 
