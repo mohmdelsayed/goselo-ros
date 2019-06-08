@@ -17,7 +17,7 @@ import math
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 # Initialize the ROS Node
-rospy.init_node('test', anonymous=True, log_level=rospy.WARN)
+rospy.init_node('markers_node')
 markers = rviz_tools.RvizMarkers('/odom', 'visualization_marker')
 
 curr_locX = None

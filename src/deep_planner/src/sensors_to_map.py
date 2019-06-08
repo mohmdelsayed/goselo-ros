@@ -99,7 +99,7 @@ class publish_input_maps:
 
 
         if (self.curr_locX == None or self.goal_locX == None):
-            rospy.logdebug("No Goal Location or Current Location!")
+            rospy.logwarn("No Goal Location or Current Location!")
             return
 
         if(self.path_map.shape == (0,0)):
@@ -271,7 +271,7 @@ def generate_goselo_maps(xA, yA, xB, yB, the_map, the_map_pathlog, m, n):
 
 if __name__ == '__main__':
          
-    rospy.init_node('publish_input_maps', anonymous=True, log_level=rospy.DEBUG, disable_signals=False)
+    rospy.init_node('publish_input_maps', log_level=rospy.DEBUG)
     pim = publish_input_maps()
     try:
       rospy.spin()

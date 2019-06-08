@@ -269,7 +269,7 @@ class publish_global_plan:
 
 def main(args):
   pgp = publish_global_plan()
-  rospy.init_node('publish_global_plan', anonymous=True)
+  rospy.init_node('goselo_network', log_level=rospy.DEBUG)
   try:
     rospy.spin()
   except KeyboardInterrupt:
