@@ -1,3 +1,4 @@
 build/
 devel/
-.vscode/
+.vscode/c_cpp_properties.json
+.vscode/settings.json
