@@ -93,7 +93,7 @@
       <publishTf>true</publishTf>
       <publishWheelJointState>true</publishWheelJointState>
       <legacyMode>false</legacyMode>
-      <updateRate>80</updateRate>
+      <updateRate>60</updateRate>
       <leftJoint>left_wheel_joint</leftJoint>
       <rightJoint>right_wheel_joint</rightJoint>
       <wheelSeparation>0.194</wheelSeparation>
@@ -109,7 +109,7 @@
     <sensor type="gpu_ray" name="head_hokuyo_sensor">
       <pose>0 0 0 0 0 0</pose>
       <visualize>false</visualize>
-      <update_rate>10</update_rate>
+      <update_rate>1</update_rate>
       <ray>
         <scan>
           <horizontal>
@@ -149,7 +149,7 @@
       <topicName>imu_data</topicName>
       <serviceName>imu_service</serviceName>
       <gaussianNoise>0.0</gaussianNoise>
-      <updateRate>80</updateRate>
+      <updateRate>60</updateRate>
       <imu>
         <noise>
           <type>gaussian</type>

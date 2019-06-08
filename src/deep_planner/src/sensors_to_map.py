@@ -56,6 +56,10 @@ class publish_input_maps:
         orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
         (roll, pitch, yaw) = euler_from_quaternion (orientation_list)
         self.orientation = yaw
+        #         print abs(data.header.stamp - self.laser_time_stamp) < 34000000
+        # if (abs(data.header.stamp - self.laser_time_stamp) < 34000000):
+        #     print "found suitable stamp!"
+        #     self.orientation = yaw
 
     def callbackGoal(self, data):
         self.goal_locX = data.pose.position.x
@@ -86,14 +90,14 @@ class publish_input_maps:
                         my_map[y, x] = 1
                     except: #out of range in map
                         pass
-            # map_vis_ = cv2.resize(my_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
+            map_vis_ = cv2.resize(my_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
+            cv2.imshow( 'Laser Scan', (map_vis_)*255)
+            cv2.waitKey(1)
             # org = cv2.resize(self.the_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
-            # cv2.imshow( 'Laser Scan', (map_vis_)*255)
-            # cv2.waitKey(1)
             # cv2.imshow( 'org Scan', (org)*255)
             # cv2.waitKey(1)
-            # cv2.imshow( 'self.path_map', self.path_map)
-            # cv2.waitKey(1)
+            cv2.imshow( 'self.path_map', self.path_map)
+            cv2.waitKey(1)
         else:
             rospy.logwarn("Cannot process laser map")
 
@@ -103,7 +107,7 @@ class publish_input_maps:
             return
 
         if(self.path_map.shape == (0,0)):
-            rospy.logdebug("No path map!")
+            rospy.logwarn("No path map!")
             return
 
         
@@ -118,7 +122,7 @@ class publish_input_maps:
             print "Goal Already Reached!"
             return
 
-        goselo_map, goselo_loc, theta = generate_goselo_maps(xA, yA, xB, yB, self.the_map, self.path_map, self.map.info.height/self.down_scale, self.map.info.width/self.down_scale)
+        goselo_map, goselo_loc, theta = generate_goselo_maps(xA, yA, xB, yB, my_map, self.path_map, self.map.info.height/self.down_scale, self.map.info.width/self.down_scale)
 
         # plot GOSELO maps for debugging and making sure they change as the robot approaches its goal
         cv2.imshow( 'goselo_map', goselo_map)
@@ -271,7 +275,7 @@ def generate_goselo_maps(xA, yA, xB, yB, the_map, the_map_pathlog, m, n):
 
 if __name__ == '__main__':
          
-    rospy.init_node('publish_input_maps', log_level=rospy.DEBUG)
+    rospy.init_node('publish_input_maps', log_level=rospy.WARN)
     pim = publish_input_maps()
     try:
       rospy.spin()
