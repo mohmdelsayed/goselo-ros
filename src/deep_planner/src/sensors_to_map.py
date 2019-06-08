@@ -18,7 +18,7 @@ from cv_bridge import CvBridge, CvBridgeError
 import roslib
 import rviz_tools_py as rviz_tools
 
-
+import copy
 
 target_imsize = (224, 224)
 
@@ -28,7 +28,7 @@ class publish_input_maps:
         self.bridge = CvBridge()
         self.current_path = np.zeros((0,0))
         self.map = None
-
+        self.counter = 0
         self.curr_locX = None
         self.curr_locY = None
         self.goal_locX = None
@@ -38,6 +38,8 @@ class publish_input_maps:
         self.path_map = np.zeros((0,0))
         self.down_scale = 10 # MAPS DOWNSCALING
         self.orientation = None
+        self.my_measurements = np.zeros((0,0))
+
         self.map_pub = rospy.Publisher("/goselo_map",Image,queue_size = 1)
         self.path_sub = rospy.Subscriber("/odompath",Float32MultiArray,self.callPath,queue_size = 1)
         self.loc_pub = rospy.Publisher("/goselo_loc",Image,queue_size = 1)
@@ -47,7 +49,7 @@ class publish_input_maps:
         self.goal_s = rospy.Subscriber("/move_base_simple/goal",PoseStamped,self.callbackGoal,queue_size = 1)
         self.laser_map = rospy.Subscriber("/map",OccupancyGrid,self.callbackMap,queue_size = 1)
         self.laserscan_sub = rospy.Subscriber("/scan",LaserScan,self.callLaserScan,queue_size = 1)
-        self.my_measurements = np.zeros((0,0))
+
 
     def callbackEKF(self, data):
         self.curr_locX = data.pose.pose.position.x
@@ -75,29 +77,38 @@ class publish_input_maps:
             #my_map = self.the_map.copy()
             #laser standalone
             my_map = np.zeros(self.the_map.shape)
-            
+            current_rotation = copy.copy(self.orientation)
+            current_x = copy.copy(self.curr_locX)
+            current_y = copy.copy(self.curr_locY)
+
             self.my_measurements = np.zeros((len(ranges), 2))
             
             # measurements in laser scanner frame
             #orientation = math.atan2(self.curr_locY-self.map.info.origin.position.y, self.curr_locX - self.map.info.origin.position.x)
             for i, measurement in enumerate(ranges):
                 if(measurement != float("inf")): # also check of being in max and min range
-                    self.my_measurements[i, 0] = math.cos(-1*min_ang + self.orientation +  i*inc)*measurement +self.curr_locX
-                    self.my_measurements[i, 1] = math.sin(-1*min_ang + self.orientation + i*inc)*measurement + self.curr_locY
+                    self.my_measurements[i, 0] = math.cos(-1*min_ang + current_rotation +  i*inc)*measurement +current_x
+                    self.my_measurements[i, 1] = math.sin(-1*min_ang + current_rotation + i*inc)*measurement + current_y
                     x = int(round((self.my_measurements[i,0]-self.map.info.origin.position.x)/(self.down_scale*self.map.info.resolution)))
                     y = int(round((self.my_measurements[i,1]-self.map.info.origin.position.y)/(self.down_scale*self.map.info.resolution)))
                     try:
                         my_map[y, x] = 1
                     except: #out of range in map
                         pass
-            map_vis_ = cv2.resize(my_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
-            cv2.imshow( 'Laser Scan', (map_vis_)*255)
-            cv2.waitKey(1)
+            # org = cv2.resize(my_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
+            # cv2.imshow( 'org Scan', (org)*255)
+            # cv2.waitKey(1)
+
+            # map_vis_ = cv2.resize(my_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)*255
+            # myText = 'scanImages/Laser Scan'+str(self.counter)+'.jpg'
+            # cv2.imwrite(myText, map_vis_)
+
+            self.counter += 1
             # org = cv2.resize(self.the_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
             # cv2.imshow( 'org Scan', (org)*255)
             # cv2.waitKey(1)
-            cv2.imshow( 'self.path_map', self.path_map)
-            cv2.waitKey(1)
+            # cv2.imshow( 'self.path_map', self.path_map)
+            # cv2.waitKey(1)
         else:
             rospy.logwarn("Cannot process laser map")
 
@@ -125,6 +136,7 @@ class publish_input_maps:
         goselo_map, goselo_loc, theta = generate_goselo_maps(xA, yA, xB, yB, my_map, self.path_map, self.map.info.height/self.down_scale, self.map.info.width/self.down_scale)
 
         # plot GOSELO maps for debugging and making sure they change as the robot approaches its goal
+
         cv2.imshow( 'goselo_map', goselo_map)
         cv2.waitKey(1)
         cv2.imshow( 'goselo_loc', goselo_loc)
@@ -134,8 +146,8 @@ class publish_input_maps:
         angle.data = theta  #in Radians
         self.angle_pub.publish(angle)
 
-        print "I published the angle"
-        print "Goselo map dimensions", goselo_map.shape
+        # print "I published the angle"
+        # print "Goselo map dimensions", goselo_map.shape
 
         goselo_map = np.array(goselo_map, dtype=np.uint8)
         goselo_loc = np.array(goselo_loc, dtype=np.uint8)  
@@ -148,7 +160,7 @@ class publish_input_maps:
         self.map_pub.publish(gos_map_sent)
         self.loc_pub.publish(gos_loc_sent)
 
-        print "Published GOSELO Maps + Input Map \n\n\n"
+        # print "Published GOSELO Maps + Input Map \n\n\n"
 
         
     def callPath(self, data):
@@ -197,7 +209,7 @@ class publish_input_maps:
         the_map = cv2.dilate(the_map,kernel,iterations = 1)
 
         self.the_map = cv2.resize(the_map, dsize=(the_map.shape[1]/self.down_scale, the_map.shape[0]/self.down_scale), interpolation=cv2.INTER_CUBIC)
-
+    
         rospy.loginfo("input_map shape, the_map shape: " + str(input_map.shape) + " , " + str(self.the_map.shape))
 
         #self.path_map = cv2.dilate(self.path_map,kernel,iterations = 1)

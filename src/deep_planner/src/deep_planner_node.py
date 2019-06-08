@@ -4,11 +4,14 @@ import rospy
 import cv2
 import numpy as np
 from nav_msgs.msg import OccupancyGrid, Odometry
-from geometry_msgs.msg import PoseStamped, Twist
-from sensor_msgs.msg import Image
+from geometry_msgs.msg import PoseStamped, Twist, PoseWithCovarianceStamped
+from sensor_msgs.msg import Image, LaserScan
 from std_msgs.msg import Float32
 from cv_bridge import CvBridge, CvBridgeError
 import actionlib
+from tf.transformations import euler_from_quaternion
+
+
 caffe_root = '/home/ros/caffe'  # Change this to your path.
 sys.path.insert(0, caffe_root + 'python')
 import caffe
@@ -17,6 +20,7 @@ import math
 import roslib
 roslib.load_manifest('deep_planner')
 from deep_planner.msg import SetYawAction, SetYawGoal
+import copy
 
 
 # CNN
@@ -37,56 +41,89 @@ class publish_global_plan:
     def __init__(self):
         self.bridge = CvBridge()
 
-        self.curr_map_sub = rospy.Subscriber("/map",OccupancyGrid,self.callback_map,queue_size = 1)
-        self.map_sub = rospy.Subscriber("/goselo_map",Image,self.callback_goselo_map,queue_size = 1)
-        self.loc_sub = rospy.Subscriber("/goselo_loc",Image,self.callback_goselo_loc,queue_size = 1)
-        self.angle_sub = rospy.Subscriber("/angle",Float32,self.callback_angle,queue_size = 1)
 
-        # TODO: remove odometry and use EKF instead
-        self.odom_sub = rospy.Subscriber("/odom",Odometry,self.callback_odom,queue_size = 1)
-        self.goal_sub = rospy.Subscriber("/move_base_simple/goal",PoseStamped,self.callback_goal,queue_size = 1) # topic subscribed from RVIZ
 
         self.direction_pub = rospy.Publisher('/goselo_dir', Float32, queue_size=1)
         self.action_goal_client = actionlib.SimpleActionClient('SetYaw', SetYawAction)
         self.move_robot = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
         self.goal_flag = 0
-        self.current_x = None
-        self.current_y = None
+        self.curr_locX = None
+        self.curr_locY = None
         self.predictions = np.zeros((1,1))
-        self.object_avoidance_range = 50
-        self.object_avoidance_window = 40
-        self.down_scale = 2
+        self.object_avoidance_range = 1500
+        self.object_avoidance_window = 500
+        self.down_scale = 10
         self.goselo_map = np.zeros((1,1))
         self.goselo_loc = np.zeros((1,1))
         self._size_width = 0   #added
         self._size_height = 0  #added
         self.cell_size = None  #added
         self.angle = 0 # made it zero instead of none
-        self.curr_map = np.zeros((1,1)) #added by mohamed
+        self.curr_map_obstacle = np.zeros((1,1))
         self.goal_x = None
         self.goal_y = None
         self.dir_src = None
         self.prev_dir = None
-        self.classifier = caffe.Classifier(model_def, pretrained_model, image_dims=image_dims, mean=None, input_scale=1.0, raw_scale=255.0, channel_swap=channel_swap)
         self.prev_avoid_direction = None
+        self.orientation = None
+        self.the_map =  np.zeros((0,0))
+        self.map = None
+        self.curr_map_sub = rospy.Subscriber("/map",OccupancyGrid,self.callback_map,queue_size = 1)
+        self.map_sub = rospy.Subscriber("/goselo_map",Image,self.callback_goselo_map,queue_size = 1)
+        self.loc_sub = rospy.Subscriber("/goselo_loc",Image,self.callback_goselo_loc,queue_size = 1)
+        self.angle_sub = rospy.Subscriber("/angle",Float32,self.callback_angle,queue_size = 1)
+        self.laserscan_sub = rospy.Subscriber("/scan",LaserScan,self.callLaserScan,queue_size = 1)
+        self.odom_sub = rospy.Subscriber("/robot_pose_ekf/odom_combined",PoseWithCovarianceStamped,self.callbackEKF,queue_size = 1)
+        self.goal_sub = rospy.Subscriber("/move_base_simple/goal",PoseStamped,self.callback_goal,queue_size = 1) # topic subscribed from RVIZ
+        self.classifier = caffe.Classifier(model_def, pretrained_model, image_dims=image_dims, mean=None, input_scale=1.0, raw_scale=255.0, channel_swap=channel_swap)
+
+    def callLaserScan(self, data):
+        min_ang = data.angle_min
+        max_ang = data.angle_max
+        inc = data.angle_increment
+        ranges = data.ranges
+        
+        if (self.the_map.shape != (0,0) and type(self.orientation) != 'NoneType'): #self.the_map.shape != (0,0) and
+            #my_map = self.the_map.copy()
+            #laser standalone
+            my_map = np.zeros(self.the_map.shape)
+            current_rotation = copy.copy(self.orientation)
+            current_x = copy.copy(self.curr_locX)
+            current_y = copy.copy(self.curr_locY)
+
+            self.my_measurements = np.zeros((len(ranges), 2))
+            
+            # measurements in laser scanner frame
+            #orientation = math.atan2(self.curr_locY-self.map.info.origin.position.y, self.curr_locX - self.map.info.origin.position.x)
+            for i, measurement in enumerate(ranges):
+                if(measurement != float("inf")): # also check of being in max and min range
+                    self.my_measurements[i, 0] = math.cos(-1*min_ang + current_rotation +  i*inc)*measurement +current_x
+                    self.my_measurements[i, 1] = math.sin(-1*min_ang + current_rotation + i*inc)*measurement + current_y
+                    x = int(round((self.my_measurements[i,0]-self.origin_x)/(self.down_scale*self.cell_size)))
+                    y = int(round((self.my_measurements[i,1]-self.origin_y)/(self.down_scale*self.cell_size)))
+                    try:
+                        my_map[y, x] = 1
+                    except: #out of range in map
+                        pass
+
+            self.curr_map_obstacle = cv2.resize(my_map, dsize=(my_map.shape[0]*self.down_scale, my_map.shape[1]*self.down_scale), interpolation=cv2.INTER_CUBIC)
+
+            cv2.imshow( 'Laser Scan', (my_map)*255)
+            cv2.waitKey(1)
+            # org = cv2.resize(self.the_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
+            # cv2.imshow( 'org Scan', (org)*255)
+            # cv2.waitKey(1)
+        else:
+            rospy.logwarn("Cannot process laser map")
+
 
     def callback_map(self,data):
-        self.curr_map = np.array(data.data).reshape((data.info.height, data.info.width))
-        
         self._size_width = data.info.width
         self._size_height = data.info.height
         self.cell_size = data.info.resolution
         self.origin_x = data.info.origin.position.x
         self.origin_y = data.info.origin.position.y
-        self.curr_map[self.curr_map == -1] = 127
-        self.curr_map = self.curr_map.astype(np.uint8)
-        self.curr_map[self.curr_map == 0] = 255
-        self.curr_map = self.curr_map.astype(np.uint8)
-        self.curr_map[self.curr_map == 100] = 0
-        self.curr_map = self.curr_map.astype(np.uint8)
-        print "Received a raw map"
-
-
+        self.the_map = np.zeros((data.info.height/self.down_scale, data.info.width/self.down_scale))
 
     def move_base(self, r_predictions):
 
@@ -117,11 +154,11 @@ class publish_global_plan:
 
         route = [dir_dst]
 
-        if (self.curr_map.shape != (1,1) and self.current_x != None and self.current_y != None and self.angle != 0 and self._size_width != 0 and self._size_height != 0 and self.cell_size != None and self.goal_x != None and self.goal_y != None):
+        if (self.curr_map_obstacle.shape != (1,1) and self.curr_locX != None and self.curr_locY != None and self.angle != 0 and self._size_width != 0 and self._size_height != 0 and self.cell_size != None and self.goal_x != None and self.goal_y != None):
             
             route = self.object_avoid(route[0])
 
-            if(self.goal_x - self.current_x)*(self.goal_x - self.current_x) + (self.goal_y - self.current_y) * (self.goal_y - self.current_y) < 5*self.cell_size:
+            if(self.goal_x - self.curr_locX)*(self.goal_x - self.curr_locX) + (self.goal_y - self.curr_locY) * (self.goal_y - self.curr_locY) < 5*self.cell_size:
                 print "I REACHED THE GOAL"
                 cmd_vel_command = Twist()
                 cmd_vel_command.linear.x = 0; 
@@ -153,8 +190,8 @@ class publish_global_plan:
         avoid_flg = False
         route = [direction]
 
-        xA = int(round((self.current_x- self.origin_x)/(self.cell_size)))
-        yA = int(round((self.current_y- self.origin_y)/(self.cell_size)))
+        xA = int(round((self.curr_locX- self.origin_x)/(self.cell_size)))
+        yA = int(round((self.curr_locY- self.origin_y)/(self.cell_size)))
 
         xA_ = xA + int(math.cos( route[0] * math.pi / 4. ) *self.object_avoidance_range)
         yA_ = yA + int(math.sin( route[0] * math.pi / 4. ) *self.object_avoidance_range)
@@ -171,17 +208,17 @@ class publish_global_plan:
         #cv2.circle( map_vis, (xB, yB), 8, (0, 0, 255), -1 )
         #cv2.imshow( 'Current Map Locations', map_vis)
         #cv2.waitKey(1)
-        if 0 in self.curr_map[ yA_-(self.object_avoidance_window/2): yA_+(self.object_avoidance_window/2), xA_-(self.object_avoidance_window/2): xA_+(self.object_avoidance_window/2)]:
+        if 1 in self.curr_map_obstacle[ yA_-(self.object_avoidance_window/2): yA_+(self.object_avoidance_window/2), xA_-(self.object_avoidance_window/2): xA_+(self.object_avoidance_window/2)]:
             print "Entered object avoidance"
             if (self.prev_avoid_direction != None):
                 c = self.prev_avoid_direction
                 xA_ = xA + int(math.cos( c * math.pi / 4. ) * self.object_avoidance_range)
                 yA_ = yA + int(math.cos( c * math.pi / 4. ) * self.object_avoidance_range)
-                if 0 not in self.curr_map[yA_-(self.object_avoidance_window/2): yA_+(self.object_avoidance_window/2), xA_-(self.object_avoidance_window/2):xA_+(self.object_avoidance_window/2)]:
+                if 1 not in self.curr_map_obstacle[yA_-(self.object_avoidance_window/2): yA_+(self.object_avoidance_window/2), xA_-(self.object_avoidance_window/2):xA_+(self.object_avoidance_window/2)]:
                     route = [c]
                     self.prev_avoid_direction = c
                     avoid_flg = True
-                    print 'Object Avoidance! Route :', route
+                    rospy.logwarn('Object Avoidance! Route :' + str(route))
                 #for c in range(2,8):
                 for c in range(route[0],route[0]+8):
                     #c = i+1
@@ -195,11 +232,11 @@ class publish_global_plan:
                         c -= 8
                     xA_ = xA + int(math.cos( c * math.pi / 4. ) * self.object_avoidance_range)
                     yA_ = yA + int(math.cos( c * math.pi / 4. ) * self.object_avoidance_range)
-                    if 0 not in self.curr_map[ yA_-(self.object_avoidance_window/2): yA_+(self.object_avoidance_window/2), xA_-(self.object_avoidance_window/2):xA_+(self.object_avoidance_window/2)]:
+                    if 1 not in self.curr_map_obstacle[ yA_-(self.object_avoidance_window/2): yA_+(self.object_avoidance_window/2), xA_-(self.object_avoidance_window/2):xA_+(self.object_avoidance_window/2)]:
                         route = [c]
                         self.prev_avoid_direction = c
                         avoid_flg = True
-                        print 'Object Avoidance! Route :', route
+                        rospy.logwarn('Object Avoidance! Route :' + str(route))
                         break
             else:
                 #for c in range(2,8):
@@ -215,7 +252,7 @@ class publish_global_plan:
                         c -= 8
                     xA_ = xA + int(math.cos( c * math.pi / 4. ) * self.object_avoidance_range)
                     yA_ = yA + int(math.cos( c * math.pi / 4. ) * self.object_avoidance_range)
-                    if 0 not in self.curr_map[ yA_-(self.object_avoidance_window/2): yA_+(self.object_avoidance_window/2), xA_-(self.object_avoidance_window/2):xA_+(self.object_avoidance_window/2)]:
+                    if 0 not in self.curr_map_obstacle[ yA_-(self.object_avoidance_window/2): yA_+(self.object_avoidance_window/2), xA_-(self.object_avoidance_window/2):xA_+(self.object_avoidance_window/2)]:
                         route = [c]
                         self.prev_avoid_direction = c
                         avoid_flg = True
@@ -259,17 +296,19 @@ class publish_global_plan:
         self.goal_x = data.pose.position.x
         self.goal_y = data.pose.position.y
 
-    def callback_odom   (self,data):
-        self.current_x = data.pose.pose.position.x
-        self.current_y = data.pose.pose.position.y
+    def callbackEKF(self, data):
+        self.curr_locX = data.pose.pose.position.x
+        self.curr_locY = data.pose.pose.position.y
+        orientation_q = data.pose.pose.orientation
+        orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
+        (roll, pitch, yaw) = euler_from_quaternion (orientation_list)
+        self.orientation = yaw
         if (self.predictions.shape != (1,1)):
             self.move_base(self.predictions)
 
-
-
 def main(args):
-  pgp = publish_global_plan()
   rospy.init_node('goselo_network', log_level=rospy.WARN)
+  pgp = publish_global_plan()
   try:
     rospy.spin()
   except KeyboardInterrupt:
