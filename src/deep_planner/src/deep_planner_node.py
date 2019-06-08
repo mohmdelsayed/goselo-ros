@@ -141,7 +141,7 @@ class publish_global_plan:
                 # self.action_goal_client.wait_for_result(rospy.Duration.from_sec(1.0))
                 self.action_goal_client.wait_for_result()
                 cmd_vel_command = Twist()
-                cmd_vel_command.linear.x = 0.1
+                cmd_vel_command.linear.x = 0.25
                 cmd_vel_command.angular.z = 0
                 self.move_robot.publish(cmd_vel_command)
         else:

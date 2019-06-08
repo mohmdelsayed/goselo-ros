@@ -35,18 +35,18 @@ class SetYawServer:
     cmd_vel_command = Twist()
     P = 1.5
     I = 0.0
-    D = 0.0
+    D = 1.0
 
     pid = PID(P, I, D, setpoint=goal.desired_yaw)
 
     if type(self.curr_heading) == 'NoneType':
       return
-
+    print(abs(goal.desired_yaw - (self.curr_heading)))
     while abs((goal.desired_yaw - (self.curr_heading))) > 0.1:
       #print "heading now, desired: ", self.curr_heading, goal.desired_yaw
       control_value = pid(self.curr_heading)
       cmd_vel_command.angular.z = control_value #control_gain * (goal.desired_yaw - (self.curr_heading))
-      cmd_vel_command.linear.x = 0.0
+      cmd_vel_command.linear.x = 0.1
       self.move_robot.publish(cmd_vel_command)
 
 
