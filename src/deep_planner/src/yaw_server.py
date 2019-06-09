@@ -41,7 +41,7 @@ class SetYawServer:
 
     if type(self.curr_heading) == 'NoneType':
       return
-    print(abs(goal.desired_yaw - (self.curr_heading)))
+    # print(abs(goal.desired_yaw - (self.curr_heading)))
     while abs((goal.desired_yaw - (self.curr_heading))) > 0.1:
       #print "heading now, desired: ", self.curr_heading, goal.desired_yaw
       control_value = pid(self.curr_heading)

@@ -1569,7 +1569,118 @@
       </camera>
     </gui>
 
+      <actor name="animated_static_cylinder1">
+        <link name="cylinder_link_static">
+          <visual name="visual">
+            <geometry>
+              <cylinder>
+              <radius>0.5</radius>
+              <length>2</length>
+              </cylinder>
+            </geometry>
+    <material>  
+      <ambient>0.19225 0.19225 0.19225 1.0</ambient>  
+      <diffuse>0.50754 0.50754 0.50754 1.0</diffuse>  
+      <specular>0.508273 0.508273 0.508273 1.0</specular>  
+      <emissive>0.0 0.0 0.0 0.0</emissive>  
+    </material>  
+          </visual>
+        </link>
+        <script>
+          <loop>true</loop>
+          <auto_start>true</auto_start>
+          <trajectory id="3" type="square">
+             <waypoint>
+                <time>0.0</time>
+                <pose>4 -4  0 0 0 0</pose>
+             </waypoint>
+             <waypoint>
+                <time>128.0</time>
+                <pose>4 -4  0 0 0 0</pose>
+             </waypoint>
+             <waypoint>
+                <time>256.0</time>
+                <pose>4 -4  0 0 0 0</pose>
+             </waypoint>
+          </trajectory>
+        </script>
+      </actor>
 
+
+      <actor name="animated_static_cylinder2">
+        <link name="cylinder_link_static">
+          <visual name="visual">
+            <geometry>
+              <cylinder>
+              <radius>0.5</radius>
+              <length>2</length>
+              </cylinder>
+            </geometry>
+    <material>  
+      <ambient>0.19225 0.19225 0.19225 1.0</ambient>  
+      <diffuse>0.50754 0.50754 0.50754 1.0</diffuse>  
+      <specular>0.508273 0.508273 0.508273 1.0</specular>  
+      <emissive>0.0 0.0 0.0 0.0</emissive>  
+    </material>  
+          </visual>
+        </link>
+        <script>
+          <loop>true</loop>
+          <auto_start>true</auto_start>
+          <trajectory id="3" type="square">
+             <waypoint>
+                <time>0.0</time>
+                <pose>3 -3  0 0 0 0</pose>
+             </waypoint>
+             <waypoint>
+                <time>128.0</time>
+                <pose>3 -3  0 0 0 0</pose>
+             </waypoint>
+             <waypoint>
+                <time>256.0</time>
+                <pose>3 -3  0 0 0 0</pose>
+             </waypoint>
+          </trajectory>
+        </script>
+      </actor>
+      
+    
+      <actor name="animated_static_cylinder3">
+        <link name="cylinder_link_static">
+          <visual name="visual">
+            <geometry>
+              <cylinder>
+              <radius>0.5</radius>
+              <length>2</length>
+              </cylinder>
+            </geometry>
+    <material>  
+      <ambient>0.19225 0.19225 0.19225 1.0</ambient>  
+      <diffuse>0.50754 0.50754 0.50754 1.0</diffuse>  
+      <specular>0.508273 0.508273 0.508273 1.0</specular>  
+      <emissive>0.0 0.0 0.0 0.0</emissive>  
+    </material>  
+          </visual>
+        </link>
+        <script>
+          <loop>true</loop>
+          <auto_start>true</auto_start>
+          <trajectory id="3" type="square">
+             <waypoint>
+                <time>0.0</time>
+                <pose>3 -4  0 0 0 0</pose>
+             </waypoint>
+             <waypoint>
+                <time>128.0</time>
+                <pose>3 -4  0 0 0 0</pose>
+             </waypoint>
+             <waypoint>
+                <time>256.0</time>
+                <pose>3 -4  0 0 0 0</pose>
+             </waypoint>
+          </trajectory>
+        </script>
+      </actor>
 
       <actor name="animated_cylinder1">
         <link name="cylinder_link1">

@@ -130,23 +130,23 @@ class publish_input_maps:
 
 
         if (abs(xA-xB) < 0.01 and abs(yA-yB) < 0.01):
-            print "Goal Already Reached!"
+            rospy.logwarn("Goal Already Reached!")
             return
 
         goselo_map, goselo_loc, theta = generate_goselo_maps(xA, yA, xB, yB, my_map, self.path_map, self.map.info.height/self.down_scale, self.map.info.width/self.down_scale)
 
         # plot GOSELO maps for debugging and making sure they change as the robot approaches its goal
 
-        cv2.imshow( 'goselo_map', goselo_map)
-        cv2.waitKey(1)
-        cv2.imshow( 'goselo_loc', goselo_loc)
-        cv2.waitKey(1)
+        # cv2.imshow( 'goselo_map', goselo_map)
+        # cv2.waitKey(1)
+        # cv2.imshow( 'goselo_loc', goselo_loc)
+        # cv2.waitKey(1)
         
         angle = Float32()		
         angle.data = theta  #in Radians
         self.angle_pub.publish(angle)
 
-        # print "I published the angle"
+        rospy.loginfo("I published the angle")
         # print "Goselo map dimensions", goselo_map.shape
 
         goselo_map = np.array(goselo_map, dtype=np.uint8)
@@ -160,7 +160,7 @@ class publish_input_maps:
         self.map_pub.publish(gos_map_sent)
         self.loc_pub.publish(gos_loc_sent)
 
-        # print "Published GOSELO Maps + Input Map \n\n\n"
+        rospy.loginfo("Published GOSELO Maps + Input Map \n\n")
 
         
     def callPath(self, data):
@@ -190,8 +190,7 @@ class publish_input_maps:
 
         '''
         self.map = data
-        rospy.loginfo("Entered callback from /map subscriber")
-        rospy.loginfo("Map Size (height, width): " + str(self.map.info.height) + " " + str(self.map.info.width))
+        rospy.loginfo("Received a map of size (height, width): " + str(self.map.info.height) + " " + str(self.map.info.width))
         rospy.loginfo("Cell Size: " + str(self.map.info.resolution))
         rospy.loginfo("Map origin: " + str(self.map.info.origin.position.x) + " " + str(self.map.info.origin.position.y))
 
@@ -224,7 +223,7 @@ def generate_goselo_maps(xA, yA, xB, yB, the_map, the_map_pathlog, m, n):
     orig_map[:,:,1][yA][xA] = 1 #/ 255.
     orig_map[:,:,2][yB][xB] = 1 #/ 255.
     orig_map[:,:,3] = np.array(the_map_pathlog)
-    print "reached after conversion"
+    # print "reached after conversion"
 
     sx = xA; sy = yA; gx = xB; gy = yB
     # get average position between goal and start
@@ -246,7 +245,7 @@ def generate_goselo_maps(xA, yA, xB, yB, the_map, the_map_pathlog, m, n):
         if gx-sx < 0:
             theta = theta + 180
 
-    print "reached after getting angle"
+    # print "reached after getting angle"
 
     im2 = scipy.ndimage.interpolation.rotate( im2, 90+theta )
     im2 = im2.transpose( (2,0,1) )
@@ -257,7 +256,7 @@ def generate_goselo_maps(xA, yA, xB, yB, the_map, the_map_pathlog, m, n):
     im3 = im3.transpose( (2,0,1) )
     l = (L+4, 4*L, 8*L)
 
-    print "I rotated the map"
+    # print "I rotated the map"
 
     for n_ in range(2):
         for i in range(3):
@@ -275,9 +274,9 @@ def generate_goselo_maps(xA, yA, xB, yB, the_map, the_map_pathlog, m, n):
     im3[(im3 > 0)*(im3 <= 1)] = 1
 
     caffe_input_map = im3.transpose( (1, 2, 0) )
-    print "Made the input map"
+    # print "Made the input map"
 
-    print "caffe input map dimensions", caffe_input_map.shape
+    # print "caffe input map dimensions", caffe_input_map.shape
 
     goselo_map = caffe_input_map[:,:,0:3]
     goselo_loc = caffe_input_map[:,:,3:6]
@@ -287,7 +286,7 @@ def generate_goselo_maps(xA, yA, xB, yB, the_map, the_map_pathlog, m, n):
 
 if __name__ == '__main__':
          
-    rospy.init_node('publish_input_maps', log_level=rospy.WARN)
+    rospy.init_node('publish_input_maps', log_level=rospy.INFO)
     pim = publish_input_maps()
     try:
       rospy.spin()
