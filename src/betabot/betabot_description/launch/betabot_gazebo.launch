@@ -6,7 +6,7 @@
 
   <param name="robot_description" command="$(find xacro)/xacro.py '$(find betabot_description)/urdf/betabot.urdf.xacro'"/>
 
-  <node name="rosbot_spawn" pkg="gazebo_ros" type="spawn_model" output="screen" args="-urdf -param robot_description -z 0.2 -x 18 -y 4 -model betabot" />
+  <node name="rosbot_spawn" pkg="gazebo_ros" type="spawn_model" output="screen" args="-urdf -param robot_description -z 0.2 -x 14 -y 0 -model betabot" />
 
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
     <param name="publish_frequency" value="1000" />
