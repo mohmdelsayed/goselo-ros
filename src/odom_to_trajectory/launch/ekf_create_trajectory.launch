@@ -1,6 +1,6 @@
  <launch>
   <!-- The path_odom_plotter node -->
-  <node name="path_generator_ekf" type="path_generator_ekf.py" pkg="odom_to_trajectory">
+  <node name="path_generator_ekf" type="path_generator_ekf.py" pkg="odom_to_trajectory" output="screen">
   <param name="max_list_append" value="100000" />
   </node>
 
