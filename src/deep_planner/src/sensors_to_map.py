@@ -54,11 +54,11 @@ class publish_input_maps:
     def callLaserScan(self, data):
 
         if not self.lock.locked():
-            self.lock.acquire() 
-            current_time = rospy.Time.now()
+            self.lock.acquire()             
             try:
-                (trans,orientation_q) = listener.lookupTransform('/map', '/base_footprint', current_time)
+                (trans,orientation_q) = listener.lookupTransform('/map', '/base_footprint', rospy.Time(0))
             except:
+                print "couldn't get right transformaton"
                 self.lock.release()
                 return
 
@@ -92,24 +92,14 @@ class publish_input_maps:
             try:
                 X = np.array(np.round((X_metric-self.origin_x)/(self.down_scale*self.cell_size)), dtype=np.uint16)
                 Y = np.array(np.round((Y_metric-self.origin_y)/(self.down_scale*self.cell_size)), dtype=np.uint16)
-                X_thresholded = X[X<self.the_map.shape[1]]
-                Y_thresholded = Y[Y<self.the_map.shape[0]]
+                X_thresholded = X[X<self.the_map.shape[0]]
+                Y_thresholded = Y[Y<self.the_map.shape[1]]
                 my_map[Y_thresholded,X_thresholded] = 1
                 self.laser_map = my_map
             except:
                 rospy.logwarn("Cannot process laser map")
                 self.lock.release()
                 return
-
-            # cv2.imshow( 'Current_Map', my_map*255)
-            # cv2.waitKey(1)
-
-            # org = cv2.resize(self.the_map, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
-            # cv2.imshow( 'org Scan', (org)*255)
-            # cv2.waitKey(1)
-            
-            # cv2.imshow( 'self.path_map', self.path_map)
-            # cv2.waitKey(1)
 
             self.lock.release()
 
@@ -150,6 +140,8 @@ class publish_input_maps:
         x = (np.round((path_vector[:,1]-self.map.info.origin.position.y)//(self.map.info.resolution*self.down_scale))).astype(int)
         temp[x, y] += 1
         self.path_map = temp
+
+
 
         if (self.goal_locX == None or self.goal_locY == None or self.curr_X == None or self.curr_Y == None):
             rospy.logwarn("No Goal Location or Current Location!")
@@ -202,6 +194,8 @@ class publish_input_maps:
         self.loc_pub.publish(gos_loc_sent)
 
         rospy.loginfo("Published GOSELO Maps + Input Map \n\n")
+
+
 
 
 

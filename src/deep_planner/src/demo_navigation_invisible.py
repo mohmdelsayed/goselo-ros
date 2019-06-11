@@ -113,8 +113,8 @@ verbose = 1 # 0 or 1 or 2
 pycaffe_dir = caffe_root + 'python/'
 center_only = True
 image_dims = [224, 224]
-model_def = '/home/ros/models/deploy.prototxt'
-pretrained_model = '/home/ros/models/goselo_invisible.caffemodel'
+model_def = '/home/ros/models/deploy_36.prototxt'
+pretrained_model ='/home/ros/models/model_36.caffemodel'
 #caffe.set_mode_gpu()
 classifier = caffe.Classifier(model_def, pretrained_model, image_dims=image_dims, mean=None, input_scale=1.0, raw_scale=255.0, channel_swap=range(6))
 

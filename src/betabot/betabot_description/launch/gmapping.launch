@@ -12,16 +12,16 @@
         <param name="xmax" value="0.1"/>
         <param name="ymax" value="0.1"/>
         <param name="maxUrange" value="5"/>
-        <param name="map_update_interval" value="5"/>
+        <param name="map_update_interval" value="0.5"/>
         <param name="linearUpdate" value="0.05"/>
         <param name="angularUpdate" value="0.05"/>
         <param name="temporalUpdate" value="0.1"/>
-        <param name="particles" value="100"/>        
+        <param name="particles" value="1000"/>        
     </node>
 
   <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
     <param name="output_frame" value="odom"/>
-    <param name="freq" value="1000.0"/>
+    <param name="freq" value="30.0"/>
     <param name="sensor_timeout" value="1.0"/>
     <param name="odom_used" value="true"/>
     <param name="imu_used" value="true"/>
