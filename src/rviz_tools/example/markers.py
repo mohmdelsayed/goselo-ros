@@ -40,12 +40,12 @@ def callbackGoal(data):
 
 def callbackDir(data):
     global orientation
-    orientation = data.data
+    orientation = data.data*math.pi/4
 
 
 def callbackDirGOSELO(data):
     global orientation_GOSELO
-    orientation_GOSELO = data.data
+    orientation_GOSELO = data.data*math.pi/4
 
 odom_sub = rospy.Subscriber("/odom",Odometry,callbackStart,queue_size = 1)
 goal_s = rospy.Subscriber("/move_base_simple/goal",PoseStamped,callbackGoal,queue_size = 1)
@@ -78,7 +78,7 @@ while not rospy.is_shutdown():
         P = Pose(Point(curr_locX,curr_locY,0),Quaternion(q1, q2, q3, q4))
 
         scale = Vector3(0.6,0.05,0.05) # x=length, y=height, z=height
-        markers.publishArrow(P, 'blue', scale, 0.01) # pose, color, scale, lifetime
+        markers.publishArrow(P, 'green', scale, 0.01) # pose, color, scale, lifetime
 
 
     # Publish an arrow using a numpy transform matrix
@@ -92,6 +92,6 @@ while not rospy.is_shutdown():
         P = Pose(Point(curr_locX,curr_locY,0),Quaternion(q1, q2, q3, q4))
 
         scale = Vector3(0.6,0.05,0.05) # x=length, y=height, z=height
-        markers.publishArrow(P, 'green', scale, 0.01) # pose, color, scale, lifetime
+        markers.publishArrow(P, 'blue', scale, 0.01) # pose, color, scale, lifetime
 
     rospy.Rate(1000).sleep() #1 Hz

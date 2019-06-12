@@ -28,7 +28,7 @@ class publish_global_plan:
         self.bridge = CvBridge()
         self.curr_X = None
         self.curr_Y = None
-        self.object_avoidance_range = 1.0
+        self.object_avoidance_range = 2.0
         self.down_scale = 10
 
         self.goal_x = None
@@ -47,7 +47,6 @@ class publish_global_plan:
         self.goal_s = rospy.Subscriber("/move_base_simple/goal",PoseStamped,self.callbackGoal,queue_size = 1)
         self.odom_sub = rospy.Subscriber("/odom",Odometry,self.callOdom,queue_size = 1)
 
-
     def callOdom(self, data):
         self.curr_X = data.pose.pose.position.x
         self.curr_Y = data.pose.pose.position.y
@@ -58,8 +57,7 @@ class publish_global_plan:
         if (self.GOSELO_Dir != None):
             self.move_base(self.GOSELO_Dir)
         else:
-            print "didn't receive goselo direction!"
-
+            rospy.logwarn("No GOSELO Direction!")
 
     def callGOSELO_Dir(self, data):
         self.GOSELO_Dir = data.data
@@ -77,6 +75,7 @@ class publish_global_plan:
                 return
             else:
                 modified_route = self.object_avoid(route)
+                #modified_route = route
                 self.direction_pub.publish(modified_route)
                 self.direction_GOSELO_pub.publish(route)
                 goal = SetYawGoal()
@@ -85,9 +84,9 @@ class publish_global_plan:
                 # print "goal after processing: ", goal_angle
                 # Fill in the goal here
                 self.action_goal_client.send_goal(goal)
-                #self.action_goal_client.wait_for_result()
+                self.action_goal_client.wait_for_result()
                 cmd_vel_command = Twist()
-                cmd_vel_command.linear.x = 0.25
+                cmd_vel_command.linear.x = 0.3
                 cmd_vel_command.angular.z = 0
                 self.move_robot.publish(cmd_vel_command)
         else:
@@ -96,7 +95,6 @@ class publish_global_plan:
             cmd_vel_command.linear.x = 0; 
             cmd_vel_command.angular.z = 0
             self.move_robot.publish(cmd_vel_command)
-
 
     def IsNotColliding(self, route):
         if len(self.obstacles_directions) > 0:

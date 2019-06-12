@@ -71,8 +71,8 @@ class publish_global_plan:
                 X_thresholded = X[X<self.the_map.shape[0]]
                 Y_thresholded = Y[Y<self.the_map.shape[1]]
                 my_map[Y_thresholded,X_thresholded] = 1
-                cv2.imshow( 'Laser Map', my_map)
-                cv2.waitKey(1)
+                # cv2.imshow( 'Laser Map', my_map)
+                # cv2.waitKey(1)
 
             except:
                 rospy.logwarn("Cannot process laser map")
