@@ -1574,7 +1574,7 @@
           <visual name="visual">
             <geometry>
               <cylinder>
-              <radius>0.5</radius>
+              <radius>0.1</radius>
               <length>2</length>
               </cylinder>
             </geometry>
@@ -1613,7 +1613,7 @@
           <visual name="visual">
             <geometry>
               <cylinder>
-              <radius>0.5</radius>
+              <radius>0.1</radius>
               <length>2</length>
               </cylinder>
             </geometry>
@@ -1660,13 +1660,12 @@
       </actor>
 
 
-
       <actor name="animated_cylinder3">
         <link name="cylinder_link3">
           <visual name="visual">
             <geometry>
               <cylinder>
-              <radius>0.5</radius>
+              <radius>0.1</radius>
               <length>2</length>
               </cylinder>
             </geometry>
@@ -1704,7 +1703,7 @@
           <visual name="visual">
             <geometry>
               <cylinder>
-              <radius>0.3</radius>
+              <radius>0.1</radius>
               <length>2</length>
               </cylinder>
             </geometry>
@@ -1736,7 +1735,42 @@
         </script>
       </actor>
 
-
+      <actor name="fdsf">
+        <link name="fsd">
+          <visual name="visual">
+            <geometry>
+              <cylinder>
+              <radius>0.5</radius>
+              <length>2</length>
+              </cylinder>
+            </geometry>
+    <material>  
+      <ambient>0.19225 0.19225 0.19225 1.0</ambient>  
+      <diffuse>0.50754 0.50754 0.50754 1.0</diffuse>  
+      <specular>0.508273 0.508273 0.508273 1.0</specular>  
+      <emissive>0.0 0.0 0.0 0.0</emissive>  
+    </material>  
+          </visual>
+        </link>
+        <script>
+          <loop>true</loop>
+          <auto_start>true</auto_start>
+          <trajectory id="1" type="square">
+             <waypoint>
+                <time>0.0</time>
+                <pose>16.0 1.0 0 0 0 0</pose>
+             </waypoint>
+             <waypoint>
+                <time>128.0</time>
+                <pose>16.0 1.0 0 0 0 0</pose>
+             </waypoint>
+             <waypoint>
+                <time>256.0</time>
+                <pose>16.0 1.0 0 0 0 0</pose>
+             </waypoint>
+          </trajectory>
+        </script>
+      </actor>
 
   </world>
 </sdf>

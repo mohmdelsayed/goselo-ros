@@ -7,6 +7,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped
 from tf.transformations import euler_from_quaternion
 import numpy as np
 import sys
+from nav_msgs.msg import Odometry
 
 def goalCallback(data):
         global x_goal
@@ -92,7 +93,8 @@ if __name__ == '__main__':
 
 
         #Subscription to the topic
-        rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, callback)
+        rospy.Subscriber('/odom', Odometry, callback)
+        # rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, callback)
         rospy.Subscriber('/move_base_simple/goal', PoseStamped, goalCallback) 
 
         rate = rospy.Rate(30)

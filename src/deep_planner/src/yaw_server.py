@@ -17,7 +17,8 @@ class SetYawServer:
     self.server = actionlib.SimpleActionServer('SetYaw', SetYawAction, self.execute, False)
     self.server.start()
     self.move_robot = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
-    self.odom_sub = rospy.Subscriber("/robot_pose_ekf/odom_combined",PoseWithCovarianceStamped,self.callbackStart,queue_size = 1)
+    # self.odom_sub = rospy.Subscriber("/robot_pose_ekf/odom_combined",PoseWithCovarianceStamped,self.callbackStart,queue_size = 1)
+    self.odom_sub = rospy.Subscriber("/odom",Odometry,self.callbackStart,queue_size = 1)
     self.curr_heading = None
 
   def callbackStart(self, msg):
@@ -42,18 +43,18 @@ class SetYawServer:
     if type(self.curr_heading) == 'NoneType':
       return
     # print(abs(goal.desired_yaw - (self.curr_heading)))
-    while abs((goal.desired_yaw - (self.curr_heading))) > 0.1:
+    while abs((goal.desired_yaw - (self.curr_heading))) > 0.05:
       #print "heading now, desired: ", self.curr_heading, goal.desired_yaw
       control_value = pid(self.curr_heading)
       cmd_vel_command.angular.z = control_value #control_gain * (goal.desired_yaw - (self.curr_heading))
-      cmd_vel_command.linear.x = 0.1
+      cmd_vel_command.linear.x = 0.0
       self.move_robot.publish(cmd_vel_command)
 
 
     # cmd_vel_command.angular.z = 0
-    # cmd_vel_command.linear.x = 0.0
+    # cmd_vel_command.linear.x = 0.25
     # self.move_robot.publish(cmd_vel_command)
-    #print "succeeded with error: ", abs((goal.desired_yaw - (self.curr_heading)))
+    print "succeeded with error: ", abs((goal.desired_yaw - (self.curr_heading)))
     self.server.set_succeeded()
 
 

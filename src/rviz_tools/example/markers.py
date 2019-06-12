@@ -25,6 +25,7 @@ curr_locY = None
 goal_locX = None
 goal_locY = None
 orientation = None
+orientation_GOSELO = None
 
 def callbackStart(data):
     global curr_locX, curr_locY
@@ -42,9 +43,14 @@ def callbackDir(data):
     orientation = data.data
 
 
+def callbackDirGOSELO(data):
+    global orientation_GOSELO
+    orientation_GOSELO = data.data
+
 odom_sub = rospy.Subscriber("/odom",Odometry,callbackStart,queue_size = 1)
 goal_s = rospy.Subscriber("/move_base_simple/goal",PoseStamped,callbackGoal,queue_size = 1)
-direction = rospy.Subscriber("/goselo_dir",Float32,callbackDir,queue_size = 1)
+direction_corrected = rospy.Subscriber("/dir_corrected",Float32,callbackDir,queue_size = 1)
+direction_goselo = rospy.Subscriber("/goselo_direction",Float32,callbackDirGOSELO,queue_size = 1)
 
 
 while not rospy.is_shutdown():
@@ -73,5 +79,19 @@ while not rospy.is_shutdown():
 
         scale = Vector3(0.6,0.05,0.05) # x=length, y=height, z=height
         markers.publishArrow(P, 'blue', scale, 0.01) # pose, color, scale, lifetime
+
+
+    # Publish an arrow using a numpy transform matrix
+    if (orientation_GOSELO != None and curr_locX != None ):
+        quat = quaternion_from_euler(0.0, 0.0, orientation_GOSELO)
+        q1 = quat[0]
+        q2 = quat[1]
+        q3 = quat[2]
+        q4 = quat[3]
+
+        P = Pose(Point(curr_locX,curr_locY,0),Quaternion(q1, q2, q3, q4))
+
+        scale = Vector3(0.6,0.05,0.05) # x=length, y=height, z=height
+        markers.publishArrow(P, 'green', scale, 0.01) # pose, color, scale, lifetime
 
     rospy.Rate(1000).sleep() #1 Hz

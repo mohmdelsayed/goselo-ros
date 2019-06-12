@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import rospy
 from sensor_msgs.msg import Image, LaserScan
-from nav_msgs.msg import OccupancyGrid
+from nav_msgs.msg import OccupancyGrid, Odometry
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from std_msgs.msg import Float32, Float32MultiArray
 import tf
@@ -46,6 +46,7 @@ class publish_input_maps:
         self.goal_s = rospy.Subscriber("/move_base_simple/goal",PoseStamped,self.callbackGoal,queue_size = 1)
         self.laser_map_sub = rospy.Subscriber("/map",OccupancyGrid,self.callbackMap,queue_size = 1)
         self.laserscan_sub = rospy.Subscriber("/scan",LaserScan,self.callLaserScan,queue_size = 1)
+        self.odom_sub = rospy.Subscriber('/odom', Odometry, self.callback_odom)
 
     def callbackGoal(self, data):
         self.goal_locX = data.pose.position.x
@@ -56,7 +57,7 @@ class publish_input_maps:
         if not self.lock.locked():
             self.lock.acquire()             
             try:
-                (trans,orientation_q) = listener.lookupTransform('/map', '/base_footprint', rospy.Time(0))
+                (trans,orientation_q) = listener.lookupTransform('/odom', '/base_footprint', rospy.Time(0))
             except:
                 print "couldn't get right transformaton"
                 self.lock.release()
@@ -96,6 +97,9 @@ class publish_input_maps:
                 Y_thresholded = Y[Y<self.the_map.shape[1]]
                 my_map[Y_thresholded,X_thresholded] = 1
                 self.laser_map = my_map
+                # cv2.imshow( 'self.laser_map', self.laser_map)
+                # cv2.waitKey(1)
+
             except:
                 rospy.logwarn("Cannot process laser map")
                 self.lock.release()
@@ -123,26 +127,7 @@ class publish_input_maps:
         self.origin_y = data.info.origin.position.y
         self.the_map = np.zeros((data.info.height/self.down_scale, data.info.width/self.down_scale))
         
-
-        
-    def callPath(self, data):
-
-        input_data_len = np.asarray(data.data).shape[0]
-        input_data = np.asarray(data.data)
-        path_vector = np.reshape(input_data, (input_data_len/3, 3))
-
-        # rospy.loginfo("Got a path of length " + str(input_data_len))
-        if (type(self.map) == 'NoneType' or self.the_map.shape == (0,0) or input_data_len == 0):
-            return
-        temp = np.zeros(self.the_map.shape)
-
-        y = (np.round((path_vector[:,0]-self.map.info.origin.position.x)//(self.map.info.resolution*self.down_scale))).astype(int)
-        x = (np.round((path_vector[:,1]-self.map.info.origin.position.y)//(self.map.info.resolution*self.down_scale))).astype(int)
-        temp[x, y] += 1
-        self.path_map = temp
-
-
-
+    def callback_odom(self,data):
         if (self.goal_locX == None or self.goal_locY == None or self.curr_X == None or self.curr_Y == None):
             rospy.logwarn("No Goal Location or Current Location!")
             return
@@ -194,6 +179,23 @@ class publish_input_maps:
         self.loc_pub.publish(gos_loc_sent)
 
         rospy.loginfo("Published GOSELO Maps + Input Map \n\n")
+        
+    def callPath(self, data):
+
+        input_data_len = np.asarray(data.data).shape[0]
+        input_data = np.asarray(data.data)
+        path_vector = np.reshape(input_data, (input_data_len/3, 3))
+
+        # rospy.loginfo("Got a path of length " + str(input_data_len))
+        if (type(self.map) == 'NoneType' or self.the_map.shape == (0,0) or input_data_len == 0):
+            rospy.logwarn("Didn't receive path yet!")
+            return
+        temp = np.zeros(self.the_map.shape)
+
+        y = (np.round((path_vector[:,0]-self.map.info.origin.position.x)//(self.map.info.resolution*self.down_scale))).astype(int)
+        x = (np.round((path_vector[:,1]-self.map.info.origin.position.y)//(self.map.info.resolution*self.down_scale))).astype(int)
+        temp[x, y] += 1
+        self.path_map = temp
 
 
 
@@ -278,46 +280,3 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
       print "Shutting down"
     cv2.destroyAllWindows()
-
-
-        # # #######################################################################
-        # # ## Visualizing Purposes Only at the end of map callback ###############
-        # # #######################################################################
- 
-        # xA = int(round((self.curr_locX-data.info.origin.position.x)/(self.down_scale*data.info.resolution)))
-        # yA = int(round((self.curr_locY-data.info.origin.position.y)/(self.down_scale*data.info.resolution)))
-
-        # xB = int(round((self.goal_locX-data.info.origin.position.x)/(self.down_scale*data.info.resolution)))
-        # yB = int(round((self.goal_locY-data.info.origin.position.y)/(self.down_scale*data.info.resolution)))
-        
-
-        # # JUST FOR PLOTTING ##
-        # map_vis = np.zeros((input_map.shape[0]/self.down_scale,input_map.shape[1]/self.down_scale,3), np.uint8)
-        # map_vis[:,:,0] = cv2.resize(input_map, dsize=(input_map.shape[1]/self.down_scale,input_map.shape[0]/self.down_scale), interpolation=cv2.INTER_CUBIC)
-        # map_vis[:,:,1] = cv2.resize(input_map, dsize=(input_map.shape[1]/self.down_scale,input_map.shape[0]/self.down_scale), interpolation=cv2.INTER_CUBIC)
-        # map_vis[:,:,2] = cv2.resize(input_map, dsize=(input_map.shape[1]/self.down_scale,input_map.shape[0]/self.down_scale), interpolation=cv2.INTER_CUBIC)
-        # cv2.circle( map_vis, (xA, yA), 8, (0, 255, 0), -1 )
-        # cv2.circle( map_vis, (xB, yB), 8, (0, 0, 255), -1 )
-        
-        # for i in range(self.current_path.shape[0]):
-        #     y = int(round((self.current_path[i,0]-data.info.origin.position.x)/(self.down_scale*data.info.resolution)))
-        #     x = int(round((self.current_path[i,1]-data.info.origin.position.y)/(self.down_scale*data.info.resolution)))
-        #     #print "Path x, y", x,y
-        #     map_vis[x, y] += 1
-
-        # RGB_img = cv2.cvtColor(map_vis, cv2.COLOR_BGR2RGB)
-        # map_vis_ = cv2.resize(map_vis, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
-        # cv2.imshow( 'Map Locations', map_vis_)
-        # cv2.waitKey(1)
-
-        # # measurements in laser scanner frame
-        # for i, measurement in enumerate(ranges):
-        #     if(measurement != float("inf")): # also check of being in max and min range
-        #         self.my_measurements[i, 0] = math.cos(-1*min_ang + current_rotation +  i*inc)*measurement +current_x
-        #         self.my_measurements[i, 1] = math.sin(-1*min_ang + current_rotation + i*inc)*measurement + current_y
-        #         x = int(round((self.my_measurements[i,0]-self.map.info.origin.position.x)/(self.down_scale*self.map.info.resolution)))
-        #         y = int(round((self.my_measurements[i,1]-self.map.info.origin.position.y)/(self.down_scale*self.map.info.resolution)))
-        #         try:
-        #             my_map[x, y] = 1
-        #         except: #out of range in map
-        #             pass
