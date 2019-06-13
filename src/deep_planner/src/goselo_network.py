@@ -16,12 +16,12 @@ image_dims = [224, 224]
 channel_swap =  [0, 1, 2, 3, 4, 5]
 
 # 8-Directions Model
-model_def = '/home/ros/models/deploy.prototxt'
-pretrained_model ='/home/ros/models/goselo_invisible.caffemodel'
+model_def = rospy.get_param('model_def', '/home/ros/models/deploy.prototxt')
+pretrained_model = rospy.get_param('pretrained_model', '/home/ros/models/goselo_invisible.caffemodel')
 
 # 36-Directions Model
-# model_def = '/home/ros/models/deploy_36.prototxt'
-# pretrained_model ='/home/ros/models/model_36.caffemodel'
+# model_def = rospy.get_param('model_def', '/home/ros/models/deploy_36.prototxt')
+# pretrained_model = rospy.get_param('pretrained_model', '/home/ros/models/model_36.caffemodel')
 
 caffe.set_mode_gpu()
 
@@ -33,7 +33,6 @@ class publish_global_plan:
         self.goselo_map = np.zeros((1,1))
         self.goselo_loc = np.zeros((1,1))
         self.angle = None
-
         self.classifier = caffe.Classifier(model_def, pretrained_model, image_dims=image_dims, mean=None, input_scale=1.0, raw_scale=255.0, channel_swap=channel_swap)
         self.direction_pub = rospy.Publisher('/goselo_dir', Float32, queue_size=1)
         self.map_sub = rospy.Subscriber("/goselo_map",Image,self.callback_goselo_map,queue_size = 1)
