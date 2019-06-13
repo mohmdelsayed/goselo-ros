@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <rosparam command="load" file="$(find deep_planner)/config/goselo_params.yaml"/>
+  
+  <include file="$(find odom_to_trajectory)/launch/ekf_create_trajectory.launch"></include>
+  <node name="markers" pkg="rviz_tools_py" type="markers.py" output="screen" />
+  <node name="goselo_network" pkg="deep_planner" type="goselo_network.py" output="screen" />
+  <node name="laser_to_directions" pkg="deep_planner" type="laser_to_directions.py" output="screen" />
+  <node name="sensors_to_map" pkg="deep_planner" type="sensors_to_map.py" output="screen" />
+
+</launch>

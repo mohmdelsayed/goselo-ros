@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+  <rosparam command="load" file="$(find deep_planner)/config/goselo_params.yaml"/>
+  <node name="yaw_server" pkg="deep_planner" type="yaw_server.py" output="screen" />
+  <node name="goselo_move_base" pkg="deep_planner" type="goselo_move_base.py" output="screen" />
+</launch>

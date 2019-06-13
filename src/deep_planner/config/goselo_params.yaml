@@ -1,0 +1,15 @@
+# General Parameters
+n_directions: 8
+down_scale: 10
+goalThreshold: 0.1
+
+# Yaw Server Parameters:
+yawThreshold: 0.1
+Pgain: 1.5
+Igain: 0.0
+Dgain: 0.0
+
+# Move Base Parameters:
+linearSpeed: 0.1
+linearWhileRotating: 0.05
+object_avoidance_range: 1.0
