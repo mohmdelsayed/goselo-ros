@@ -57,13 +57,13 @@ while not rospy.is_shutdown():
 
     if (curr_locX != None):
         # Publish a sphere by passing diameter as a float
-        point = Point(curr_locX,curr_locY,0.3)
+        point = Point(curr_locX,curr_locY,0.2)
         diameter = 0.2
         markers.publishSphere(point, 'green', diameter, 0.01) # pose, color, diameter, lifetime
 
     if (goal_locX != None):
         # Publish a sphere by passing diameter as a float
-        point = Point(goal_locX,goal_locY,0.3)
+        point = Point(goal_locX,goal_locY,0.2)
         diameter = 0.2
         markers.publishSphere(point, 'red', diameter, 0.01) # pose, color, diameter, lifetime
 
@@ -75,7 +75,7 @@ while not rospy.is_shutdown():
         q3 = quat[2]
         q4 = quat[3]
 
-        P = Pose(Point(curr_locX,curr_locY,0),Quaternion(q1, q2, q3, q4))
+        P = Pose(Point(curr_locX,curr_locY,0.085),Quaternion(q1, q2, q3, q4))
 
         scale = Vector3(0.6,0.05,0.05) # x=length, y=height, z=height
         markers.publishArrow(P, 'green', scale, 0.01) # pose, color, scale, lifetime
@@ -89,7 +89,7 @@ while not rospy.is_shutdown():
         q3 = quat[2]
         q4 = quat[3]
 
-        P = Pose(Point(curr_locX,curr_locY,0),Quaternion(q1, q2, q3, q4))
+        P = Pose(Point(curr_locX,curr_locY,0.085),Quaternion(q1, q2, q3, q4))
 
         scale = Vector3(0.6,0.05,0.05) # x=length, y=height, z=height
         markers.publishArrow(P, 'blue', scale, 0.01) # pose, color, scale, lifetime
