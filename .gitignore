@@ -1,5 +1,5 @@
 build/
 devel/
-.vscode/c_cpp_properties.json
-.vscode/settings.json
-.catkin_workspace
+./.vscode/c_cpp_properties.json
+./.vscode/settings.json
+./.catkin_workspace
