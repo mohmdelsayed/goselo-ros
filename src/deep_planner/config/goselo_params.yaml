@@ -10,7 +10,7 @@ Igain: 0.0
 Dgain: 0.0
 
 # Move Base Parameters:
-linearSpeed: 0.1
+linearSpeed: 0.3
 linearWhileRotating: 0.05
 object_avoidance_range: 1.0
 
