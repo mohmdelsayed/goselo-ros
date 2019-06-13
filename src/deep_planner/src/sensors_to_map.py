@@ -150,15 +150,6 @@ class publish_input_maps:
         if self.laser_map.shape == (0,0):
             return
         goselo_map, goselo_loc, theta = generate_goselo_maps(xA, yA, xB, yB, self.laser_map, self.path_map, self.map.info.height/self.down_scale, self.map.info.width/self.down_scale)
-
-
-        #############################################################################################
-        # plot GOSELO maps for debugging and making sure they change as the robot approaches its goal
-        ##############################################################################################
-        # cv2.imshow( 'goselo_map', goselo_map)
-        # cv2.waitKey(1)
-        # cv2.imshow( 'goselo_loc', goselo_loc)
-        # cv2.waitKey(1)
         
         angle = Float32()		
         angle.data = theta  #in Radians
@@ -187,10 +178,15 @@ class publish_input_maps:
         path_vector = np.reshape(input_data, (input_data_len/3, 3))
 
         # rospy.loginfo("Got a path of length " + str(input_data_len))
-        if (type(self.map) == 'NoneType' or self.the_map.shape == (0,0) or input_data_len == 0):
+        if (type(self.map) == 'NoneType' or self.the_map.shape == (0,0)):
             rospy.logwarn("Didn't receive path yet!")
             return
+
         temp = np.zeros(self.the_map.shape)
+
+        if(input_data_len == 0):
+            self.path_map = temp
+            return
 
         y = (np.round((path_vector[:,0]-self.map.info.origin.position.x)//(self.map.info.resolution*self.down_scale))).astype(int)
         x = (np.round((path_vector[:,1]-self.map.info.origin.position.y)//(self.map.info.resolution*self.down_scale))).astype(int)

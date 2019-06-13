@@ -6,11 +6,10 @@ import numpy as np
 from std_msgs.msg import Float32
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
-caffe_root = '/home/ros/caffe'  # Change this to your path.
+caffe_root = '/home/ros/caffe'
 sys.path.insert(0, caffe_root + 'python')
 import caffe
 
-# CNN
 pycaffe_dir = caffe_root + 'python/'
 center_only = True
 image_dims = [224, 224]
@@ -18,7 +17,6 @@ channel_swap =  [0, 1, 2, 3, 4, 5]
 model_def = '/home/ros/models/deploy.prototxt'
 # model_def = '/home/ros/models/deploy_36.prototxt'
 
-#pretrained_model = sys.argv[ 1 ]
 pretrained_model ='/home/ros/models/goselo_invisible.caffemodel'
 # pretrained_model ='/home/ros/models/model_36.caffemodel'
 caffe.set_mode_gpu()
@@ -53,7 +51,6 @@ class publish_global_plan:
         if (self.goselo_map.shape == (1,1)) or (self.goselo_loc.shape == (1,1)):
             return
         else:
-            #print "I entered classifier"
             predictions = self.classifier.predict([np.concatenate([self.goselo_map, self.goselo_loc], 2)], not center_only)
             dir_src = np.argmax( predictions )
 
@@ -62,7 +59,6 @@ class publish_global_plan:
             ang = 360 - resolution * dir_src - self.angle - 90
             while ang < 0:
                 ang = ang + 360
-            # print "Heading Angle: ", ang
 
             dir_dst = n_directions - int( round( ( ang % 360) / resolution ) )
             if dir_dst == n_directions:

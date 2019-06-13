@@ -18,7 +18,7 @@ class publish_global_plan:
         self.object_avoidance_range = 1.0
         self.down_scale = 10
         self.cell_size = None
-
+        self.n_directions = 8
         self.the_map =  np.zeros((0,0))
         self.lock = threading.Lock()
         self.obstacles_directions = []
@@ -80,28 +80,38 @@ class publish_global_plan:
                 return
 
             self.obstacles_directions = []
-            offset = 0
             self.object_avoidance_range = 1.0
             small_ranges = correct_values[correct_values<self.object_avoidance_range]*inc 
             angles = (correct_indicies[correct_values<self.object_avoidance_range]*inc) + current_rotation
 
             if angles.size:
+                
+                # Trial for making rules that can be used for 36-model and 8-model
+                # for i in range(self.n_directions):
+                #     resolution = 1.0/self.n_directions
+                #     increment = 2.0/(self.n_directions)
+                #     if angles[(angles <= math.pi*(resolution + (i+1)*increment)) | (angles >= (resolution + i*increment)*math.pi)].size
+                #         self.obstacles_directions.append(i+1)
+
+                #     if angles[(angles <= math.pi*0.125) | (angles >= 1.875*math.pi)].size:
+                #         self.obstacles_directions.append(0)
+
                 if angles[(angles <= math.pi*0.125) | (angles >= 1.875*math.pi)].size:
-                    self.obstacles_directions.append((0 + offset) % 8)
+                    self.obstacles_directions.append(0)
                 if angles[(angles <= math.pi*0.375) & (angles > 0.125*math.pi)].size:
-                    self.obstacles_directions.append((1 + offset) % 8)
+                    self.obstacles_directions.append(1)
                 if angles[(angles <= math.pi*0.675) & (angles > 0.375*math.pi)].size:
-                    self.obstacles_directions.append((2 + offset) % 8)
+                    self.obstacles_directions.append(2)
                 if angles[(angles <= math.pi*0.875) & (angles > 0.675*math.pi)].size:
-                    self.obstacles_directions.append((3 + offset) % 8)
+                    self.obstacles_directions.append(3)
                 if angles[(angles <= math.pi*1.125) & (angles > 0.875*math.pi)].size:
-                    self.obstacles_directions.append((4 + offset) % 8)
+                    self.obstacles_directions.append(4)
                 if angles[(angles <= math.pi*1.375) & (angles > 1.125*math.pi)].size:
-                    self.obstacles_directions.append((5 + offset) % 8)
+                    self.obstacles_directions.append(5)
                 if angles[(angles <= math.pi*1.625) & (angles > 1.375*math.pi)].size:
-                    self.obstacles_directions.append((6 + offset) % 8)
+                    self.obstacles_directions.append(6)
                 if angles[(angles <= math.pi*1.875) & (angles >= 1.625*math.pi)].size:
-                    self.obstacles_directions.append((7 + offset) % 8)
+                    self.obstacles_directions.append(7)
             
             # print self.obstacles_directions
             my_array_for_publishing = Float32MultiArray(data=self.obstacles_directions)

@@ -21,6 +21,7 @@ import copy
 import timeit
 import threading
 
+from scipy.spatial import distance
 
 class publish_global_plan:
 
@@ -28,7 +29,6 @@ class publish_global_plan:
         self.bridge = CvBridge()
         self.curr_X = None
         self.curr_Y = None
-        self.object_avoidance_range = 2.0
         self.down_scale = 10
 
         self.goal_x = None
@@ -64,10 +64,12 @@ class publish_global_plan:
 
     def move_base(self, route):
         if (self.curr_X != None and self.goal_x != None):
-            
-            if(self.goal_x - self.curr_X)*(self.goal_x - self.curr_X) + (self.goal_y - self.curr_Y) * (self.goal_y - self.curr_Y) < 0.05:
+            cmd_vel_command = Twist()
+            goal_position = (self.goal_x, self.goal_y)
+            robot_position = (self.curr_X, self.curr_Y)
+
+            if(distance.euclidean(goal_position, robot_position)) < 0.05:
                 print "I REACHED THE GOAL"
-                cmd_vel_command = Twist()
                 cmd_vel_command.linear.x = 0; 
                 cmd_vel_command.angular.z = 0
                 self.move_robot.publish(cmd_vel_command)
@@ -75,17 +77,14 @@ class publish_global_plan:
                 return
             else:
                 modified_route = self.object_avoid(route)
-                #modified_route = route
                 self.direction_pub.publish(modified_route)
                 self.direction_GOSELO_pub.publish(route)
                 goal = SetYawGoal()
                 goal_angle = (modified_route * math.pi / 4.)
                 goal.desired_yaw = goal_angle
-                # print "goal after processing: ", goal_angle
-                # Fill in the goal here
+
                 self.action_goal_client.send_goal(goal)
                 self.action_goal_client.wait_for_result()
-                cmd_vel_command = Twist()
                 cmd_vel_command.linear.x = 0.3
                 cmd_vel_command.angular.z = 0
                 self.move_robot.publish(cmd_vel_command)
