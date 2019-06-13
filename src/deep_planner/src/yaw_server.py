@@ -14,6 +14,12 @@ from simple_pid import PID
 class SetYawServer:
   def __init__(self):
 
+    self.yawThreshold = rospy.get_param('yawThreshold', 0.1)
+    self.Pgain = rospy.get_param('Pgain', 1.5)
+    self.Igain = rospy.get_param('Igain', 0.0)
+    self.Dgain = rospy.get_param('Dgain', 0.0)
+    self.linearWhileRotating = rospy.get_param('linearWhileRotating', 0.05)
+    
     self.curr_heading = None
     self.server = actionlib.SimpleActionServer('SetYaw', SetYawAction, self.execute, False)
     self.server.start()
@@ -31,18 +37,18 @@ class SetYawServer:
   def execute(self, goal):
 
     cmd_vel_command = Twist()
-    P = 1.5
-    I = 0.0
-    D = 0.0
+    P = self.Pgain
+    I = self.Igain
+    D = self.Dgain
     pid = PID(P, I, D, setpoint=goal.desired_yaw)
 
     if type(self.curr_heading) == 'NoneType':
       return
 
-    while abs((goal.desired_yaw - (self.curr_heading))) > 0.1:
+    while abs((goal.desired_yaw - (self.curr_heading))) > self.yawThreshold:
       control_value = pid(self.curr_heading)
       cmd_vel_command.angular.z = control_value
-      cmd_vel_command.linear.x = 0.05
+      cmd_vel_command.linear.x = self.linearWhileRotating
       self.move_robot.publish(cmd_vel_command)
 
     #print "succeeded with error: ", abs((goal.desired_yaw - (self.curr_heading)))

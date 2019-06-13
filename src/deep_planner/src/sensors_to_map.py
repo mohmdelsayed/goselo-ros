@@ -35,7 +35,8 @@ class publish_input_maps:
         self.laser_map = np.zeros((0,0))
         self.the_map = np.zeros((0,0))
         self.path_map = np.zeros((0,0))
-        self.down_scale = 10 # MAPS DOWNSCALING
+        self.down_scale = rospy.get_param('down_scale', 10)
+        
         self.lock = threading.Lock()
 
         self.map_pub = rospy.Publisher("/goselo_map",Image,queue_size = 1)

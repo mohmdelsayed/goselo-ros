@@ -26,11 +26,15 @@ from scipy.spatial import distance
 class publish_global_plan:
 
     def __init__(self):
+
+        self.down_scale = rospy.get_param('down_scale', 10)
+        self.n_directions = rospy.get_param('n_directions', 8)
+        self.goalThreshold = rospy.get_param('goalThreshold', 0.05)
+        self.linearSpeed = rospy.get_param('linearSpeed', 0.3)
+
         self.bridge = CvBridge()
         self.curr_X = None
         self.curr_Y = None
-        self.down_scale = 10
-
         self.goal_x = None
         self.goal_y = None
         self.the_map =  np.zeros((0,0))
@@ -68,8 +72,8 @@ class publish_global_plan:
             goal_position = (self.goal_x, self.goal_y)
             robot_position = (self.curr_X, self.curr_Y)
 
-            if(distance.euclidean(goal_position, robot_position)) < 0.05:
-                print "I REACHED THE GOAL"
+            if(distance.euclidean(goal_position, robot_position)) < self.goalThreshold:
+                rospy.loginfo("I REACHED THE GOAL")
                 cmd_vel_command.linear.x = 0; 
                 cmd_vel_command.angular.z = 0
                 self.move_robot.publish(cmd_vel_command)
@@ -85,7 +89,7 @@ class publish_global_plan:
 
                 self.action_goal_client.send_goal(goal)
                 self.action_goal_client.wait_for_result()
-                cmd_vel_command.linear.x = 0.3
+                cmd_vel_command.linear.x = self.linearSpeed
                 cmd_vel_command.angular.z = 0
                 self.move_robot.publish(cmd_vel_command)
         else:
@@ -105,16 +109,15 @@ class publish_global_plan:
             return True
 
     def possible_dirs(self, direction):
-        n_directions = 8
-        goselo_dirs =  list(np.arange(n_directions))
+        goselo_dirs =  list(np.arange(self.n_directions))
         direction_index = goselo_dirs.index(direction)
         myList = []
         for i in range(1,50):
             if not goselo_dirs[direction_index - i] in myList:
                 myList.append(goselo_dirs[direction_index - i])
-            if not goselo_dirs[(direction_index + i) % n_directions] in myList:
-                myList.append(goselo_dirs[(direction_index + i) % n_directions])
-            if  goselo_dirs[direction_index - i] == goselo_dirs[(direction_index + i) % n_directions]:
+            if not goselo_dirs[(direction_index + i) % self.n_directions] in myList:
+                myList.append(goselo_dirs[(direction_index + i) % self.n_directions])
+            if  goselo_dirs[direction_index - i] == goselo_dirs[(direction_index + i) % self.n_directions]:
                 break
         return myList
 
@@ -137,7 +140,7 @@ class publish_global_plan:
 
 
 if __name__ == '__main__':
-  rospy.init_node('robot_mover')
+  rospy.init_node('robot_move_base')
   listener = tf.TransformListener()
   pgp = publish_global_plan()
   try:

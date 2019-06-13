@@ -14,23 +14,28 @@ pycaffe_dir = caffe_root + 'python/'
 center_only = True
 image_dims = [224, 224]
 channel_swap =  [0, 1, 2, 3, 4, 5]
-model_def = '/home/ros/models/deploy.prototxt'
-# model_def = '/home/ros/models/deploy_36.prototxt'
 
+# 8-Directions Model
+model_def = '/home/ros/models/deploy.prototxt'
 pretrained_model ='/home/ros/models/goselo_invisible.caffemodel'
+
+# 36-Directions Model
+# model_def = '/home/ros/models/deploy_36.prototxt'
 # pretrained_model ='/home/ros/models/model_36.caffemodel'
+
 caffe.set_mode_gpu()
 
 class publish_global_plan:
 
     def __init__(self):
+        self.n_directions = rospy.get_param('n_directions', 8)
         self.bridge = CvBridge()
         self.goselo_map = np.zeros((1,1))
         self.goselo_loc = np.zeros((1,1))
-        self.angle = 0
-        self.direction_pub = rospy.Publisher('/goselo_dir', Float32, queue_size=1)
+        self.angle = None
 
         self.classifier = caffe.Classifier(model_def, pretrained_model, image_dims=image_dims, mean=None, input_scale=1.0, raw_scale=255.0, channel_swap=channel_swap)
+        self.direction_pub = rospy.Publisher('/goselo_dir', Float32, queue_size=1)
         self.map_sub = rospy.Subscriber("/goselo_map",Image,self.callback_goselo_map,queue_size = 1)
         self.loc_sub = rospy.Subscriber("/goselo_loc",Image,self.callback_goselo_loc,queue_size = 1)
         self.angle_sub = rospy.Subscriber("/angle",Float32,self.callback_angle,queue_size = 1)
@@ -48,20 +53,19 @@ class publish_global_plan:
         except CvBridgeError, e:
             print e
         # predict direction
-        if (self.goselo_map.shape == (1,1)) or (self.goselo_loc.shape == (1,1)):
+        if (self.goselo_map.shape == (1,1)) or (self.goselo_loc.shape == (1,1) or self.angle == None):
             return
         else:
             predictions = self.classifier.predict([np.concatenate([self.goselo_map, self.goselo_loc], 2)], not center_only)
             dir_src = np.argmax( predictions )
 
-            resolution = 45
-            n_directions = 8
+            resolution = 360/self.n_directions
             ang = 360 - resolution * dir_src - self.angle - 90
             while ang < 0:
                 ang = ang + 360
 
-            dir_dst = n_directions - int( round( ( ang % 360) / resolution ) )
-            if dir_dst == n_directions:
+            dir_dst = self.n_directions - int( round( ( ang % 360) / resolution ) )
+            if dir_dst == self.n_directions:
                 dir_dst = 0
 
             route = dir_dst

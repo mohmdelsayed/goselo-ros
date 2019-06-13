@@ -15,10 +15,11 @@ from std_msgs.msg import Float32MultiArray
 class publish_global_plan:
 
     def __init__(self):
-        self.object_avoidance_range = 1.0
-        self.down_scale = 10
+        self.object_avoidance_range = rospy.get_param('object_avoidance_range', 1.0)
+        self.down_scale = rospy.get_param('down_scale', 10)
+        self.n_directions = rospy.get_param('n_directions', 8)
+        
         self.cell_size = None
-        self.n_directions = 8
         self.the_map =  np.zeros((0,0))
         self.lock = threading.Lock()
         self.obstacles_directions = []
@@ -80,7 +81,6 @@ class publish_global_plan:
                 return
 
             self.obstacles_directions = []
-            self.object_avoidance_range = 1.0
             small_ranges = correct_values[correct_values<self.object_avoidance_range]*inc 
             angles = (correct_indicies[correct_values<self.object_avoidance_range]*inc) + current_rotation
 
