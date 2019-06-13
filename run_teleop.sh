@@ -1,3 +1,3 @@
 #!/bin/bash
 
-roslaunch rosbot_navigation rosbot_teleop.launch
+roslaunch betabot_navigation betabot_teleop.launch
