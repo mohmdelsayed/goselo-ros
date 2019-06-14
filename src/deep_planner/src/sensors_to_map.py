@@ -36,7 +36,8 @@ class publish_input_maps:
         self.the_map = np.zeros((0,0))
         self.path_map = np.zeros((0,0))
         self.down_scale = rospy.get_param('down_scale', 10)
-        
+        self.TimeParameter = rospy.get_param('publishing_wait', 10)
+        self.previous_wait = 0
         self.lock = threading.Lock()
 
         self.map_pub = rospy.Publisher("/goselo_map",Image,queue_size = 1)
@@ -154,9 +155,7 @@ class publish_input_maps:
         
         angle = Float32()		
         angle.data = theta  #in Radians
-        self.angle_pub.publish(angle)
 
-        rospy.loginfo("I published the angle")
         # print "Goselo map dimensions", goselo_map.shape
 
         goselo_map = np.array(goselo_map, dtype=np.uint8)
@@ -166,12 +165,15 @@ class publish_input_maps:
         gos_loc_sent = self.bridge.cv2_to_imgmsg(goselo_loc,"bgr8")
 
         ### Publishing the three maps required to deep planner ###
+        time_now = rospy.get_rostime().secs
 
-        self.map_pub.publish(gos_map_sent)
-        self.loc_pub.publish(gos_loc_sent)
+        if (time_now - self.previous_wait >= self.TimeParameter):
+            self.map_pub.publish(gos_map_sent)
+            self.loc_pub.publish(gos_loc_sent)
+            self.angle_pub.publish(angle)
+            self.previous_wait = time_now
+            rospy.loginfo("Published GOSELO Maps + Input Map + Angle \n")
 
-        rospy.loginfo("Published GOSELO Maps + Input Map \n\n")
-        
     def callPath(self, data):
 
         input_data_len = np.asarray(data.data).shape[0]
