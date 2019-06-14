@@ -10,8 +10,8 @@ Igain: 0.0
 Dgain: 0.0
 
 # Move Base Parameters:
-linearSpeed: 0.3
-linearWhileRotating: 0.0
+linearSpeed: 0.4
+linearWhileRotating: 0.1
 object_avoidance_range: 1.0 # zero for no object avoidance
 
 # Model Definition:

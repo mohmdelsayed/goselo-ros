@@ -1574,7 +1574,7 @@
           <visual name="visual">
             <geometry>
               <cylinder>
-              <radius>0.1</radius>
+              <radius>0.2</radius>
               <length>2</length>
               </cylinder>
             </geometry>
@@ -1613,7 +1613,7 @@
           <visual name="visual">
             <geometry>
               <cylinder>
-              <radius>0.1</radius>
+              <radius>0.2</radius>
               <length>2</length>
               </cylinder>
             </geometry>
@@ -1665,7 +1665,7 @@
           <visual name="visual">
             <geometry>
               <cylinder>
-              <radius>0.1</radius>
+              <radius>0.2</radius>
               <length>2</length>
               </cylinder>
             </geometry>
@@ -1703,7 +1703,7 @@
           <visual name="visual">
             <geometry>
               <cylinder>
-              <radius>0.1</radius>
+              <radius>0.2</radius>
               <length>2</length>
               </cylinder>
             </geometry>

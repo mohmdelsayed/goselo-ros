@@ -64,38 +64,12 @@ class publish_global_plan:
             correct_indicies = correct_indicies[correct_values<2.0]
             correct_values = correct_values[correct_values<2.0]
 
-            X_metric = np.cos(-1*min_ang + current_rotation +  correct_indicies*inc)*correct_values +current_x
-            Y_metric = np.sin(-1*min_ang + current_rotation + correct_indicies*inc)*correct_values + current_y
-            try:
-                X = np.array(np.round((X_metric-self.origin_x)/(self.down_scale*self.cell_size)), dtype=np.uint16)
-                Y = np.array(np.round((Y_metric-self.origin_y)/(self.down_scale*self.cell_size)), dtype=np.uint16)
-                X_thresholded = X[X<self.the_map.shape[0]]
-                Y_thresholded = Y[Y<self.the_map.shape[1]]
-                my_map[Y_thresholded,X_thresholded] = 1
-                # cv2.imshow( 'Laser Map', my_map)
-                # cv2.waitKey(1)
-
-            except:
-                rospy.logwarn("Cannot process laser map")
-                self.lock.release()
-                return
-
             self.obstacles_directions = []
             small_ranges = correct_values[correct_values<self.object_avoidance_range]*inc 
             angles = (correct_indicies[correct_values<self.object_avoidance_range]*inc) + current_rotation
 
             if angles.size:
                 
-                # Trial for making rules that can be used for 36-model and 8-model
-                # for i in range(self.n_directions):
-                #     resolution = 1.0/self.n_directions
-                #     increment = 2.0/(self.n_directions)
-                #     if angles[(angles <= math.pi*(resolution + (i+1)*increment)) | (angles >= (resolution + i*increment)*math.pi)].size
-                #         self.obstacles_directions.append(i+1)
-
-                #     if angles[(angles <= math.pi*0.125) | (angles >= 1.875*math.pi)].size:
-                #         self.obstacles_directions.append(0)
-
                 if angles[(angles <= math.pi*0.125) | (angles >= 1.875*math.pi)].size:
                     self.obstacles_directions.append(0)
                 if angles[(angles <= math.pi*0.375) & (angles > 0.125*math.pi)].size:
