@@ -5,14 +5,14 @@ goalThreshold: 0.1
 
 # Yaw Server Parameters:
 yawThreshold: 0.1
-Pgain: 1.5
+Pgain: 5.0
 Igain: 0.0
 Dgain: 0.0
 
 # Move Base Parameters:
 linearSpeed: 0.3
-linearWhileRotating: 0.05
-object_avoidance_range: 1.0
+linearWhileRotating: 0.1
+object_avoidance_range: 0.0
 
 # Model Definition:
 model_def: '/home/ros/models/deploy.prototxt'

@@ -51,13 +51,13 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>betabot_description</build_depend>
   <build_depend>betabot_gazebo</build_depend>
-  <build_depend>move_base</build_depend>
+
   <build_export_depend>betabot_description</build_export_depend>
   <build_export_depend>betabot_gazebo</build_export_depend>
-  <build_export_depend>move_base</build_export_depend>
+
   <exec_depend>betabot_description</exec_depend>
   <exec_depend>betabot_gazebo</exec_depend>
-  <exec_depend>move_base</exec_depend>
+
 
 
   <!-- The export tag contains other, unspecified, tags -->

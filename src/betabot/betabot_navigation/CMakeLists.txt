@@ -10,7 +10,6 @@ project(betabot_navigation)
 find_package(catkin REQUIRED COMPONENTS
   betabot_description
   betabot_gazebo
-  move_base
 )
 
 ## System dependencies are found with CMake's conventions
