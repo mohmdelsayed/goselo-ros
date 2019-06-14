@@ -7,16 +7,16 @@
         <!-- <remap from="scan" to="/betabot/laser/scan"/> -->
         <param name="odom_frame" value="odom"/>
         <param name="delta" value="0.01"/>
-        <param name="xmin" value="-0.1"/>
-        <param name="ymin" value="-0.1"/>
-        <param name="xmax" value="0.1"/>
-        <param name="ymax" value="0.1"/>
-        <param name="maxUrange" value="5"/>
-        <param name="map_update_interval" value="0.5"/>
-        <param name="linearUpdate" value="0.05"/>
-        <param name="angularUpdate" value="0.05"/>
-        <param name="temporalUpdate" value="0.1"/>
-        <param name="particles" value="30"/>        
+        <param name="xmin" value="-5"/>
+        <param name="ymin" value="-5"/>
+        <param name="xmax" value="5"/>
+        <param name="ymax" value="5"/>
+        <param name="maxUrange" value="50"/>
+        <param name="map_update_interval" value="5.0"/>
+        <param name="linearUpdate" value="1"/>
+        <param name="angularUpdate" value="1"/>
+        <param name="temporalUpdate" value="1"/>
+        <param name="particles" value="1"/>        
     </node>
 
   <!-- <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">

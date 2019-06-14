@@ -11,10 +11,10 @@ Dgain: 0.0
 
 # Move Base Parameters:
 linearSpeed: 0.3
-linearWhileRotating: 0.1
+linearWhileRotating: 0.0
 object_avoidance_range: 1.0 # zero for no object avoidance
 
 # Model Definition:
 model_def: '/home/ros/models/deploy.prototxt'
 pretrained_model: '/home/ros/models/goselo_invisible.caffemodel'
-publishing_wait: 3 # time in seconds
+publishing_wait: 0 # time in seconds

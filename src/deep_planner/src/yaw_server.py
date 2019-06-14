@@ -30,8 +30,8 @@ class SetYawServer:
     orientation_q = msg.pose.pose.orientation
     orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
     (roll, pitch, yaw) = euler_from_quaternion (orientation_list)
-    if yaw <= 0:
-      yaw = yaw + 2*math.pi
+    # if yaw <= 0:
+    #   yaw = yaw + 2*math.pi
     self.curr_heading = yaw
 
   def execute(self, goal):
@@ -44,17 +44,15 @@ class SetYawServer:
     if type(self.curr_heading) == 'NoneType':
       return
 
-    
     # pid = PID(P, I, D, setpoint=goal.desired_yaw)
 
-    while abs((goal.desired_yaw - (self.curr_heading))) > self.yawThreshold:
+    while np.minimum(abs(goal.desired_yaw - self.curr_heading), abs(goal.desired_yaw - self.curr_heading - 2*math.pi)) > self.yawThreshold:
       diff = goal.desired_yaw - self.curr_heading
-
       if (diff > math.pi):
         diff = diff - 2*math.pi
       elif (diff < -1*math.pi):
         diff = diff + 2*math.pi
-      
+
       cmd_vel_command.angular.z = self.Pgain*diff
       cmd_vel_command.linear.x = self.linearWhileRotating
       self.move_robot.publish(cmd_vel_command)
