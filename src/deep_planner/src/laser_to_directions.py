@@ -34,7 +34,7 @@ class publish_global_plan:
         if not self.lock.locked():
             self.lock.acquire()             
             try:
-                (trans,orientation_q) = listener.lookupTransform('/odom', '/base_footprint', rospy.Time(0))
+                (trans,orientation_q) = listener.lookupTransform('/odom', '/rplidar_link', rospy.Time(0))
             except:
                 print "couldn't get right transformaton"
                 self.lock.release()

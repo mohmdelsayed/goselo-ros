@@ -59,7 +59,7 @@ class publish_input_maps:
         if not self.lock.locked():
             self.lock.acquire()             
             try:
-                (trans,orientation_q) = listener.lookupTransform('/odom', '/base_footprint', rospy.Time(0))
+                (trans,orientation_q) = listener.lookupTransform('/odom', '/rplidar_link', rospy.Time(0))
             except:
                 print "couldn't get right transformaton"
                 self.lock.release()
@@ -157,9 +157,15 @@ class publish_input_maps:
         angle.data = theta  #in Radians
 
         # print "Goselo map dimensions", goselo_map.shape
+        cv2.imshow( 'GOSELO Map', goselo_map)
+        cv2.waitKey(1)
+        cv2.imshow( 'GOSELO Self Locations', goselo_loc)
+        cv2.waitKey(1)
+
 
         goselo_map = np.array(goselo_map, dtype=np.uint8)
         goselo_loc = np.array(goselo_loc, dtype=np.uint8)  
+
 
         gos_map_sent = self.bridge.cv2_to_imgmsg(goselo_map,"bgr8")
         gos_loc_sent = self.bridge.cv2_to_imgmsg(goselo_loc,"bgr8")
@@ -195,8 +201,8 @@ class publish_input_maps:
         x = (np.round((path_vector[:,1]-self.map.info.origin.position.y)//(self.map.info.resolution*self.down_scale))).astype(int)
         temp[x, y] += 1
         self.path_map = temp
-
-
+        # cv2.imshow( 'Path Map', self.path_map)
+        # cv2.waitKey(1)
 
 
 
